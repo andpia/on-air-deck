@@ -18,11 +18,10 @@
 
 OnAirDeck uses **CMake** for modern, cross-platform dependency management.
 
-### Option A: Using CMake (Recommended)
 1.  **Clone the repository**:
     ```bash
-    git clone [https://github.com/your-username/onairdeck.git](https://github.com/your-username/onairdeck.git)
-    cd onairdeck
+    git clone https://github.com/andpia/on-air-deck.git
+    cd on-air-deck
     ```
 2.  **Generate and Build**:
     ```bash
@@ -30,15 +29,11 @@ OnAirDeck uses **CMake** for modern, cross-platform dependency management.
     cmake --build build --config Release
     ```
 
-### Option B: Using Projucer
-1.  Open `OnAirDeck.jucer` in the **Projucer**.
-2.  Save and Open in your preferred IDE (Visual Studio / Xcode).
-
 ## 🛠️ Hardware & Streaming Setup
 
 * **Audio Interface**: Use an **ASIO** driver on Windows for the best **broadcasting** experience.
 * **Streaming Output**: Supports MP3/AAC streams for global **web radio** compatibility.
-* **Sample Rate**: Optimized for 44.1kHz and 48kHz **broadcast** standards.
+* **Bitrate**: Optimized for 64–128 kbps **broadcast** standards.
 
 ## 📄 License
 
@@ -46,4 +41,4 @@ This project is licensed under the **GNU GPLv3**. See the `LICENSE` file for mor
 
 ---
 
-**Made with ❤️, JUCE, and a passion for Radio Broadcasting**
+**Made with ❤️, JUCE and a passion for Radio Broadcasting**
