@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.22)
 project(OnAirDeck VERSION 0.1.0 LANGUAGES C CXX)
 
 # Generate compile_commands.json to help VS Code's IntelliSense resolve include paths
@@ -46,11 +46,18 @@ set_target_properties(OnAirDeck PROPERTIES
 )
 
 # Use generator expressions for configuration-specific flags
-target_compile_options(OnAirDeck PRIVATE
-    $<$<CONFIG:Debug>:-g -O0 -fsanitize=address>
-    $<$<CONFIG:Release>:-O3>
-)
-target_link_options(OnAirDeck PRIVATE $<$<CONFIG:Debug>:-fsanitize=address>)
+if(NOT MSVC)
+    target_compile_options(OnAirDeck PRIVATE
+        $<$<CONFIG:Debug>:-g -O0 -fsanitize=address>
+        $<$<CONFIG:Release>:-O3>
+    )
+    target_link_options(OnAirDeck PRIVATE $<$<CONFIG:Debug>:-fsanitize=address>)
+else()
+    target_compile_options(OnAirDeck PRIVATE
+        $<$<CONFIG:Debug>:/Zi>
+        $<$<CONFIG:Release>:/O2>
+    )
+endif()
 
 # AppleClang specifics
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
