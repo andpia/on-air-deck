@@ -19,6 +19,14 @@ file(GLOB_RECURSE OnAirDeck_sources CONFIGURE_DEPENDS
 
 target_sources(OnAirDeck PRIVATE ${OnAirDeck_sources})
 
+# Try to find CURL; disable it if not available or on Windows cross-compile
+find_package(CURL QUIET)
+if(CURL_FOUND AND NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(USE_CURL ON)
+else()
+    set(USE_CURL OFF)
+endif()
+
 target_link_libraries(OnAirDeck PRIVATE
     juce::juce_core
     juce::juce_audio_basics
@@ -33,9 +41,13 @@ target_link_libraries(OnAirDeck PRIVATE
     juce::juce_recommended_warning_flags
 )
 
+if(USE_CURL)
+    target_link_libraries(OnAirDeck PRIVATE CURL::libcurl)
+endif()
+
 target_compile_definitions(OnAirDeck PRIVATE
     JUCE_WEB_BROWSER=0
-    JUCE_USE_CURL=1
+    JUCE_USE_CURL=${USE_CURL}
 )
 
 juce_generate_juce_header(OnAirDeck)

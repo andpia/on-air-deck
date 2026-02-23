@@ -20,7 +20,7 @@ OnAirDeck uses **CMake** for modern, cross-platform dependency management.
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/andpia/on-air-deck.git
+    git clone --recursive https://github.com/andpia/on-air-deck.git
     cd on-air-deck
     ```
 2.  **Generate and Build**:
@@ -28,6 +28,12 @@ OnAirDeck uses **CMake** for modern, cross-platform dependency management.
     cmake -B build
     cmake --build build --config Release
     ```
+
+### Linux Dependencies
+If compiling on Linux, ensure you have the required development libraries installed:
+```bash
+sudo apt-get update && sudo apt-get install libasound2-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libgl1-mesa-dev libwebkitgtk-6.0-dev libgtk-3-dev libcurl4-openssl-dev
+```
 
 ## 🛠️ Hardware & Streaming Setup
 

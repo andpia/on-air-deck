@@ -20,6 +20,18 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+           # Install correct WebKitGTK package based on Ubuntu version
+           webkit_package="libwebkit2gtk-4.0-dev"
+           if lsb_release -rs 2>/dev/null | grep -q "24.04"; then
+             webkit_package="libwebkitgtk-6.0-dev"
+           fi
+           
+           sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libgl1-mesa-dev "$webkit_package" libgtk-3-dev libcurl4-openssl-dev
+
       - name: Install CMake (>= 3.22)
         uses: lukka/get-cmake@v3
         with:

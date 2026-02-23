@@ -16,6 +16,7 @@ public:
 
     void initialise (const juce::String& commandLine) override
     {
+        juce::ignoreUnused (commandLine);
         // This method is where you should create your mainWindow.
         mainWindow.reset (new MainWindow (getApplicationName()));
     }
@@ -35,6 +36,7 @@ public:
 
     void anotherInstanceStarted (const juce::String& commandLine) override
     {
+        juce::ignoreUnused (commandLine);
         // When another instance of the app is launched while this one is running,
         // this method is invoked, and the commandLine parameter tells you what
         // the other instance's command-line arguments were.
