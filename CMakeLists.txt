@@ -27,12 +27,23 @@ juce_add_gui_app(OnAirDeck
     BUNDLE_ID "com.andpia.onairdeck"
 )
 
-# Explicit source list instead of GLOB_RECURSE for reliability
-target_sources(OnAirDeck PRIVATE
-    Source/Main.cpp
-    Source/MainComponent.cpp
-    Source/MainComponent.h
+# Use `src` directory and auto-generate source list so new files are picked up
+file(GLOB_RECURSE ONAIRDECK_SOURCES CONFIGURE_DEPENDS
+    ${CMAKE_SOURCE_DIR}/src/*.cpp
+    ${CMAKE_SOURCE_DIR}/src/*.c
+    ${CMAKE_SOURCE_DIR}/src/*.mm
+    ${CMAKE_SOURCE_DIR}/src/*.m
+    ${CMAKE_SOURCE_DIR}/src/*.hpp
+    ${CMAKE_SOURCE_DIR}/src/*.h
 )
+if(NOT ONAIRDECK_SOURCES)
+    message(WARNING "No source files found in ${CMAKE_CURRENT_SOURCE_DIR}/src")
+endif()
+target_sources(OnAirDeck PRIVATE ${ONAIRDECK_SOURCES})
+
+# Include local `src` headers for the target and request C++17 via compile features
+target_include_directories(OnAirDeck PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_compile_features(OnAirDeck PRIVATE cxx_std_17)
 
 # CURL support: only if requested and available, and not on Windows
 if(ONAIRDECK_USE_CURL AND NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
