@@ -1,8 +1,13 @@
 #include "MainComponent.h"
 
+using namespace OnAirDeck;
+
 MainComponent::MainComponent()
 {
-    setSize (800, 600);
+    addAndMakeVisible (sidebarComponent);
+    addAndMakeVisible (contentComponent);
+
+    setSize (960, 600);
 }
 
 MainComponent::~MainComponent()
@@ -11,16 +16,12 @@ MainComponent::~MainComponent()
 
 void MainComponent::paint (juce::Graphics& g)
 {
-    // Our component is opaque, so we must completely fill the background with a solid colour
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
-
-    g.setFont (juce::FontOptions (16.0f));
-    g.setColour (juce::Colours::white);
-    g.drawText ("OnAirDeck", getLocalBounds(), juce::Justification::centred, true);
+    g.fillAll (Theme::windowBg());
 }
 
 void MainComponent::resized()
 {
-    // This is called when the MainComponent is resized.
-    // If you add any child components, this is where you should update their positions.
+    auto area = getLocalBounds();
+    sidebarComponent.setBounds (area.removeFromLeft (Theme::sidebarWidth));
+    contentComponent.setBounds (area);
 }

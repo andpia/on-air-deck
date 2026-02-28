@@ -1,5 +1,6 @@
 #include <JuceHeader.h>
 #include "MainComponent.h"
+#include "DarkLookAndFeel.h"
 
 /**
     @class OnAirDeckApplication
@@ -17,14 +18,14 @@ public:
     void initialise (const juce::String& commandLine) override
     {
         juce::ignoreUnused (commandLine);
-        // This method is where you should create your mainWindow.
+        juce::LookAndFeel::setDefaultLookAndFeel (&darkLookAndFeel);
         mainWindow.reset (new MainWindow (getApplicationName()));
     }
 
     void shutdown() override
     {
-        // Add your application's shutdown code here.
         mainWindow = nullptr; // Deletes our window
+        juce::LookAndFeel::setDefaultLookAndFeel (nullptr);
     }
 
     void systemRequestedQuit() override
@@ -91,6 +92,7 @@ public:
     };
 
 private:
+    DarkLookAndFeel darkLookAndFeel;
     std::unique_ptr<MainWindow> mainWindow;
 };
 
