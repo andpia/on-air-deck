@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 
 # Centralized version
 set(ONAIRDECK_VERSION "0.1.0")
+set(ONAIRDECK_COMPANY_NAME "BremaLabs")
 
 project(OnAirDeck VERSION ${ONAIRDECK_VERSION} LANGUAGES C CXX)
 
@@ -24,6 +25,7 @@ add_subdirectory(JUCE)
 juce_add_gui_app(OnAirDeck
     PRODUCT_NAME "OnAirDeck"
     VERSION "${ONAIRDECK_VERSION}"
+    COMPANY_NAME "${ONAIRDECK_COMPANY_NAME}"
     BUNDLE_ID "com.andpia.onairdeck"
 )
 
@@ -89,6 +91,8 @@ endif()
 target_compile_definitions(OnAirDeck PRIVATE
     JUCE_WEB_BROWSER=0
     JUCE_USE_CURL=${USE_CURL}
+    ONAIRDECK_VERSION="${ONAIRDECK_VERSION}"
+    ONAIRDECK_COMPANY_NAME="${ONAIRDECK_COMPANY_NAME}"
 )
 
 juce_generate_juce_header(OnAirDeck)
