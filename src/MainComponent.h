@@ -1,13 +1,17 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "SidebarComponent.h"
+#include "ContentComponent.h"
+#include "ThemeTokens.h"
 
 /**
     @class MainComponent
     @brief The main content component of the application.
 
-    This component lives inside the main window and contains all the
-    application's controls and content.
+    Implements the RootLayout concept from the Figma design:
+    a fixed-width sidebar on the left and a content area that
+    fills the remaining space on the right.
 */
 class MainComponent  : public juce::Component
 {
@@ -21,17 +25,19 @@ public:
 
     //==============================================================================
     /**
-        Draws the content of the component.
+        Draws the component background using the dark theme window token.
         @param g The graphics context used for drawing.
     */
     void paint (juce::Graphics&) override;
 
     /**
-        Called when the component is resized.
-        Use this method to layout child components.
+        Lays out the sidebar and content child components.
     */
     void resized() override;
 
 private:
+    SidebarComponent sidebarComponent;
+    ContentComponent contentComponent;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
