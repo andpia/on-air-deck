@@ -1,0 +1,2 @@
+# Hashes of file build rules.
+bdca2002f0a046f0ba3c6c5fd21a3bc9 OnAirDeck_artefacts/JuceLibraryCode/JuceHeader.h
