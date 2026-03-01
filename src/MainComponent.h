@@ -1,37 +1,31 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "SidebarComponent.h"
+#include "NowPlayingComponent.h"
+#include "UpNextComponent.h"
+#include "StreamStatusComponent.h"
+#include "AudioMixerComponent.h"
+#include "CrossfadeComponent.h"
+#include "VolumeMeterComponent.h"
 
-/**
-    @class MainComponent
-    @brief The main content component of the application.
-
-    This component lives inside the main window and contains all the
-    application's controls and content.
-*/
-class MainComponent  : public juce::Component
+class MainComponent : public juce::Component
 {
 public:
-    //==============================================================================
-    /** Constructor. */
     MainComponent();
-
-    /** Destructor. */
     ~MainComponent() override;
 
-    //==============================================================================
-    /**
-        Draws the content of the component.
-        @param g The graphics context used for drawing.
-    */
-    void paint (juce::Graphics&) override;
-
-    /**
-        Called when the component is resized.
-        Use this method to layout child components.
-    */
+    void paint(juce::Graphics&) override;
     void resized() override;
 
 private:
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
+    SidebarComponent      sidebar;
+    NowPlayingComponent   nowPlaying;
+    UpNextComponent       upNext;
+    StreamStatusComponent streamStatus;
+    AudioMixerComponent   audioMixer;
+    CrossfadeComponent    crossfade;
+    VolumeMeterComponent  volumeMeters;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };
