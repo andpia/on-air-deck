@@ -34,3 +34,6 @@ Thumbs.db
 *.o
 *.obj
 *.log
+
+# --- CodeQL ---
+/_codeql_detected_source_root
