@@ -19,6 +19,17 @@ option(ONAIRDECK_USE_CURL "Enable CURL support for HTTP functionality" ON)
 option(ONAIRDECK_ENABLE_SANITIZERS "Enable AddressSanitizer in Debug builds (non-MSVC only)" ON)
 option(ONAIRDECK_UNITY_BUILD "Enable Unity Build to speed up compilation" OFF)
 
+# Web UI configuration
+# Path to the pre-built Vite dist/ folder.  Set this when packaging:
+#   cmake -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist ...
+# If left empty no copy is performed; the app will show an error page in Release.
+set(WEBUI_DIST_PATH "" CACHE PATH
+    "Path to the Web UI dist/ folder produced by 'npm run build' in the on-air-deck-figma repo")
+
+# URL of the Vite dev server, loaded in Debug builds only.
+set(WEBUI_DEV_SERVER_URL "http://localhost:5173" CACHE STRING
+    "Vite dev server URL (used in Debug builds for hot-reload support)")
+
 # Add JUCE as subdirectory
 add_subdirectory(JUCE)
 
@@ -89,10 +100,11 @@ if(USE_CURL)
 endif()
 
 target_compile_definitions(OnAirDeck PRIVATE
-    JUCE_WEB_BROWSER=0
+    JUCE_WEB_BROWSER=1
     JUCE_USE_CURL=${USE_CURL}
     ONAIRDECK_VERSION="${ONAIRDECK_VERSION}"
     ONAIRDECK_COMPANY_NAME="${ONAIRDECK_COMPANY_NAME}"
+    WEBUI_DEV_SERVER_URL="${WEBUI_DEV_SERVER_URL}"
 )
 
 juce_generate_juce_header(OnAirDeck)
@@ -129,4 +141,35 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
     target_compile_options(OnAirDeck PRIVATE -fcolor-diagnostics)
 endif()
 
+# Post-build: copy the pre-built Web UI into the output directory.
+# Set WEBUI_DIST_PATH to the dist/ folder produced by `npm run build`.
+if(WEBUI_DIST_PATH AND EXISTS "${WEBUI_DIST_PATH}")
+    if(APPLE)
+        # macOS: copy into the .app bundle's Resources folder.
+        add_custom_command(TARGET OnAirDeck POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${WEBUI_DIST_PATH}"
+                "$<TARGET_BUNDLE_DIR:OnAirDeck>/Contents/Resources/WebUI"
+            COMMENT "Copying Web UI to OnAirDeck.app/Contents/Resources/WebUI"
+        )
+    else()
+        # Windows / Linux: copy next to the executable.
+        add_custom_command(TARGET OnAirDeck POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${WEBUI_DIST_PATH}"
+                "$<TARGET_FILE_DIR:OnAirDeck>/WebUI"
+            COMMENT "Copying Web UI to WebUI/ next to executable"
+        )
+    endif()
+    message(STATUS "WebUI dist: ${WEBUI_DIST_PATH} -> copied post-build")
+else()
+    if(WEBUI_DIST_PATH)
+        message(WARNING "WEBUI_DIST_PATH is set but the path does not exist: ${WEBUI_DIST_PATH}")
+    else()
+        message(STATUS "WebUI dist: not configured (set -DWEBUI_DIST_PATH=<path> to enable)")
+    endif()
+endif()
+
+message(STATUS "WebUI dev server URL: ${WEBUI_DEV_SERVER_URL} (Debug builds only)")
 message(STATUS "Unity Build: ${ONAIRDECK_UNITY_BUILD}")
+
