@@ -92,6 +92,32 @@ In **Debug** builds the app automatically connects to the Vite dev server so UI 
 | `WEBUI_DIST_PATH` | *(empty)* | Path to the Vite `dist/` folder. When set, files are copied post-build. |
 | `WEBUI_DEV_SERVER_URL` | `http://localhost:5173` | URL loaded in **Debug** builds. |
 
+## 📚 Documentation
+
+Project documentation is now built with **MkDocs** and published through GitHub Pages.
+
+### Local Preview
+
+1. Install the documentation dependencies:
+   ```bash
+   python3 -m pip install -r requirements-docs.txt
+   ```
+2. Start the local documentation server:
+   ```bash
+   mkdocs serve
+   ```
+3. Open `http://127.0.0.1:8000` in your browser.
+
+### Static Build
+
+To generate the static site locally:
+
+```bash
+mkdocs build --strict
+```
+
+The generated site will be written to the `site/` directory.
+
 ---
 
 ## 🔌 JS ↔ JUCE Bridge
