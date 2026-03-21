@@ -94,6 +94,8 @@ In **Debug** builds the app automatically connects to the Vite dev server so UI 
 
 ## 📚 Documentation
 
+📖 **[Read the full documentation on GitHub Pages →](https://andpia.github.io/on-air-deck/)**
+
 Project documentation is now built with **MkDocs** and published through GitHub Pages.
 
 ### Local Preview
