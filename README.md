@@ -30,15 +30,15 @@ OnAirDeck uses **CMake** for modern, cross-platform dependency management.
     ```
 2. **Generate and Build (Quick Start - Debug)**:
    ```bash
-   cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug
-   cmake --build build-debug --config Debug
+   cmake -S . -B out/build/debug -DCMAKE_BUILD_TYPE=Debug
+   cmake --build out/build/debug --config Debug
    ```
 
 3. **Release build**:
    Build `web-ui/dist` first (or pass `WEBUI_DIST_PATH` to an external dist), then:
    ```bash
-   cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
-   cmake --build build-release --config Release
+   cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release
+   cmake --build out/build/release --config Release
    ```
 
 ### Linux Dependencies
@@ -65,9 +65,9 @@ In **Debug** builds the app automatically connects to the Vite dev server so UI 
    ```
 2. Build OnAirDeck in **Debug** mode and run it:
    ```bash
-   cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug
-   cmake --build build-debug --config Debug
-   ./build-debug/OnAirDeck_artefacts/Debug/OnAirDeck   # path varies by OS
+   cmake -S . -B out/build/debug -DCMAKE_BUILD_TYPE=Debug
+   cmake --build out/build/debug --config Debug
+   ./out/build/debug/OnAirDeck_artefacts/Debug/OnAirDeck   # path varies by OS
    ```
    The embedded browser will load `http://localhost:5173` and reflect live edits.
 
@@ -87,15 +87,15 @@ In **Debug** builds the app automatically connects to the Vite dev server so UI 
 
 2. Build OnAirDeck in **Release**:
    ```bash
-   cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
-   cmake --build build-release --config Release
+   cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release
+   cmake --build out/build/release --config Release
    ```
 
    If your frontend dist is outside `web-ui/dist`, point CMake at that folder explicitly:
    ```bash
-   cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release \
+   cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release \
          -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist
-   cmake --build build-release --config Release
+   cmake --build out/build/release --config Release
    ```
    CMake will copy the Web UI to the correct location automatically:
    - **macOS**: `OnAirDeck.app/Contents/Resources/WebUI/`
@@ -134,7 +134,7 @@ To generate the static site locally:
 mkdocs build --strict
 ```
 
-The generated site will be written to the `site/` directory.
+The generated site will be written to the `out/docs/site/` directory.
 
 ## 🧰 One-Command Release Build
 
@@ -147,8 +147,10 @@ bash scripts/release.sh
 Optional environment variables:
 
 - `FRONTEND_DIR`: path to frontend repo (default: `web-ui`, fallback: `../on-air-deck-figma`)
-- `BUILD_DIR`: output build directory (default: `build-release`)
+- `BUILD_DIR`: output build directory (default: `out/build/release`)
 - `DIST_DIR`: frontend dist path (default: `$FRONTEND_DIR/dist`)
+
+Legacy generated output folders `build-debug`, `build-release`, and `site` are deprecated in favor of the `out/` structure.
 
 ---
 

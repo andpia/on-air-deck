@@ -28,7 +28,7 @@ source .venv/bin/activate
 mkdocs build --strict
 ```
 
-The generated static site is written to `site/` and is ignored by Git.
+The generated static site is written to `out/docs/site/` and is ignored by Git.
 
 ## Publication
 
@@ -40,7 +40,7 @@ The workflow:
 2. installs Python 3.11
 3. installs `requirements-docs.txt`
 4. runs `mkdocs build --strict`
-5. uploads `site/` as the Pages artifact
+5. uploads `out/docs/site/` as the Pages artifact
 6. deploys the generated site
 
 ## When Deploy Runs

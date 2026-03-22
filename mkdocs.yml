@@ -3,6 +3,7 @@ site_description: Documentation for OnAirDeck, the JUCE-based web radio engine.
 site_url: https://andpia.github.io/on-air-deck/
 repo_url: https://github.com/andpia/on-air-deck
 repo_name: andpia/on-air-deck
+site_dir: out/docs/site
 
 theme:
   name: material

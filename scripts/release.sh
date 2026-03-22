@@ -10,7 +10,7 @@ elif [[ -d "$ROOT_DIR/web-ui" ]]; then
 else
 	FRONTEND_DIR="$ROOT_DIR/../on-air-deck-figma"
 fi
-BUILD_DIR="${BUILD_DIR:-$ROOT_DIR/build-release}"
+BUILD_DIR="${BUILD_DIR:-$ROOT_DIR/out/build/release}"
 DIST_DIR="${DIST_DIR:-$FRONTEND_DIR/dist}"
 
 echo "[1/3] Building frontend in $FRONTEND_DIR"

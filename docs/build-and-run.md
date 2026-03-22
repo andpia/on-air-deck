@@ -27,8 +27,8 @@ For frontend setup details, see [Web UI](web-ui.md) and [Dependencies](dependenc
 ## Debug Build
 
 ```bash
-cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug
-cmake --build build-debug --config Debug
+cmake -S . -B out/build/debug -DCMAKE_BUILD_TYPE=Debug
+cmake --build out/build/debug --config Debug
 ```
 
 In Debug, the app loads the Web UI from the Vite development server configured by `WEBUI_DEV_SERVER_URL`.
@@ -42,16 +42,16 @@ cd web-ui
 npm install
 npm run build
 cd ..
-cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
-cmake --build build-release --config Release
+cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release
+cmake --build out/build/release --config Release
 ```
 
 If your frontend lives outside this repository, point CMake at the generated `dist/` directory explicitly:
 
 ```bash
-cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release \
+cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release \
   -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist
-cmake --build build-release --config Release
+cmake --build out/build/release --config Release
 ```
 
 ## Linux Packages
