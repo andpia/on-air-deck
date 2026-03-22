@@ -41,7 +41,7 @@ set(WEBUI_DEV_SERVER_URL "http://localhost:5173" CACHE STRING
     "Vite dev server URL (used in Debug builds for hot-reload support)")
 
 # Add JUCE as subdirectory
-add_subdirectory(JUCE)
+add_subdirectory(vendor/JUCE)
 
 juce_add_gui_app(OnAirDeck
     PRODUCT_NAME "OnAirDeck"

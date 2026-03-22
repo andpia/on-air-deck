@@ -4,7 +4,7 @@
 
 - CMake 3.22 or newer
 - A C++17-capable compiler
-- Git submodules initialized so the `JUCE/` and `web-ui/` directories are populated
+- Git submodules initialized so the `vendor/JUCE/` and `web-ui/` directories are populated
 - Access to the companion frontend repository `andpia/on-air-deck-figma` (included as `web-ui/` submodule by default)
   - Debug workflow: run the Vite development server
   - Release workflow: build `dist/` and pass it through `WEBUI_DIST_PATH`

@@ -8,7 +8,7 @@ This page lists external repositories required to build and run OnAirDeck workfl
 
 - Repository: [juce-framework/JUCE](https://github.com/juce-framework/JUCE)
 - Usage: native application framework and platform abstraction layer.
-- Integration: included as a git submodule inside `JUCE/`.
+- Integration: included as a git submodule inside `vendor/JUCE/`.
 - Impact:
   - Required for all Debug and Release native builds.
 

@@ -1,5 +1,5 @@
 [submodule "JUCE"]
-	path = JUCE
+	path = vendor/JUCE
 	url = https://github.com/juce-framework/JUCE.git
 [submodule "web-ui"]
 	path = web-ui
