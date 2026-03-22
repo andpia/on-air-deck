@@ -48,6 +48,8 @@ juce_add_gui_app(OnAirDeck
     VERSION "${ONAIRDECK_VERSION}"
     COMPANY_NAME "${ONAIRDECK_COMPANY_NAME}"
     BUNDLE_ID "com.andpia.onairdeck"
+    NEEDS_CURL TRUE
+    NEEDS_WEB_BROWSER TRUE
 )
 
 # Use `src` directory and auto-generate source list so new files are picked up
