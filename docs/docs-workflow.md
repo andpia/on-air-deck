@@ -7,8 +7,8 @@ This repository uses MkDocs for documentation authoring and GitHub Pages for pub
 On macOS, system Python may block global `pip install` because of PEP 668. Use a virtual environment instead.
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv .venv-docs
+source .venv-docs/bin/activate
 pip install -r requirements-docs.txt
 mkdocs serve
 ```
@@ -24,7 +24,7 @@ http://127.0.0.1:8000
 To validate links and configuration before pushing:
 
 ```bash
-source .venv/bin/activate
+source .venv-docs/bin/activate
 mkdocs build --strict
 ```
 
