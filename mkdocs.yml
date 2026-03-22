@@ -16,6 +16,7 @@ nav:
   - Home: index.md
   - Architecture: architecture.md
   - Build and Run: build-and-run.md
+  - Dependencies: dependencies.md
   - Web UI: web-ui.md
   - Bridge API: bridge-api.md
   - Docs Workflow: docs-workflow.md

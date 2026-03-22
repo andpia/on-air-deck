@@ -15,10 +15,12 @@ http://localhost:5173
 Start the frontend from the companion repository:
 
 ```bash
-cd ../on-air-deck-figma
+cd web-ui
 npm install
 npm run dev
 ```
+
+If you keep the frontend repository outside this project, use that external path instead.
 
 If Vite runs on a different port, reconfigure CMake:
 

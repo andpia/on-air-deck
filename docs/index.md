@@ -13,6 +13,7 @@ OnAirDeck is a JUCE-based radio automation console and web streaming application
 
 - [Architecture](architecture.md): runtime structure and native/frontend boundaries.
 - [Build and Run](build-and-run.md): local build steps for Debug and Release.
+- [Dependencies](dependencies.md): external repositories required by build and packaging workflows.
 - [Web UI](web-ui.md): how the embedded frontend is loaded in development and production.
 - [Bridge API](bridge-api.md): the `myapp://` communication bridge between JavaScript and JUCE.
 - [Docs Workflow](docs-workflow.md): local preview and GitHub Pages publishing.

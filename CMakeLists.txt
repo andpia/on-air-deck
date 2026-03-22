@@ -20,11 +20,21 @@ option(ONAIRDECK_ENABLE_SANITIZERS "Enable AddressSanitizer in Debug builds (non
 option(ONAIRDECK_UNITY_BUILD "Enable Unity Build to speed up compilation" OFF)
 
 # Web UI configuration
-# Path to the pre-built Vite dist/ folder.  Set this when packaging:
+# Path to the pre-built Vite dist/ folder.
+# If not set explicitly and the `web-ui` submodule has a built dist/, it is auto-detected.
+# You can always override it manually, for example:
 #   cmake -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist ...
-# If left empty no copy is performed; the app will show an error page in Release.
 set(WEBUI_DIST_PATH "" CACHE PATH
-    "Path to the Web UI dist/ folder produced by 'npm run build' in the on-air-deck-figma repo")
+    "Path to the Web UI dist/ folder produced by 'npm run build'")
+
+set(ONAIRDECK_WEBUI_SUBMODULE_DIR "${CMAKE_SOURCE_DIR}/web-ui")
+if(NOT WEBUI_DIST_PATH)
+    set(_WEBUI_DIST_AUTODETECT "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/dist")
+    if(EXISTS "${_WEBUI_DIST_AUTODETECT}")
+        set(WEBUI_DIST_PATH "${_WEBUI_DIST_AUTODETECT}")
+        message(STATUS "WebUI dist: auto-detected from submodule at ${WEBUI_DIST_PATH}")
+    endif()
+endif()
 
 # URL of the Vite dev server, loaded in Debug builds only.
 set(WEBUI_DEV_SERVER_URL "http://localhost:5173" CACHE STRING

@@ -3,7 +3,13 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-FRONTEND_DIR="${FRONTEND_DIR:-$ROOT_DIR/../on-air-deck-figma}"
+if [[ -n "${FRONTEND_DIR:-}" ]]; then
+	FRONTEND_DIR="$FRONTEND_DIR"
+elif [[ -d "$ROOT_DIR/web-ui" ]]; then
+	FRONTEND_DIR="$ROOT_DIR/web-ui"
+else
+	FRONTEND_DIR="$ROOT_DIR/../on-air-deck-figma"
+fi
 BUILD_DIR="${BUILD_DIR:-$ROOT_DIR/build-release}"
 DIST_DIR="${DIST_DIR:-$FRONTEND_DIR/dist}"
 
