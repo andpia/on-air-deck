@@ -25,12 +25,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install documentation dependencies
         run: python -m pip install -r requirements-docs.txt
@@ -38,24 +38,10 @@ jobs:
       - name: Build MkDocs site
         run: mkdocs build --strict
 
-      - name: Archive Pages artifact
-        run: |
-          tar \
-            --dereference --hard-dereference \
-            --directory ./out/docs/site \
-            -cvf "$RUNNER_TEMP/artifact.tar" \
-            --exclude=.git \
-            --exclude=.github \
-            --exclude=".[^/]*" \
-            .
-
       - name: Upload Pages artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-pages-artifact@v4
         with:
-          name: github-pages
-          path: ${{ runner.temp }}/artifact.tar
-          retention-days: 1
-          if-no-files-found: error
+          path: ./out/docs/site
 
   deploy:
     needs: build
