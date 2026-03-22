@@ -7,11 +7,12 @@
 
 # --- CMake ---
 /CMakeLists.txt.user
+/out/
+# Legacy build directories (deprecated in favor of /out/)
 /build/
 /build-debug/
 /build-release/
 /cmake-build-*/
-/out/
 /_deps/
 
 # --- IDEs & OS ---
