@@ -21,13 +21,13 @@ option(ONAIRDECK_UNITY_BUILD "Enable Unity Build to speed up compilation" OFF)
 
 # Web UI configuration
 # Path to the pre-built Vite dist/ folder.
-# If not set explicitly and the `web-ui` submodule has a built dist/, it is auto-detected.
+# If not set explicitly and the `vendor/web-ui` submodule has a built dist/, it is auto-detected.
 # You can always override it manually, for example:
 #   cmake -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist ...
 set(WEBUI_DIST_PATH "" CACHE PATH
     "Path to the Web UI dist/ folder produced by 'npm run build'")
 
-set(ONAIRDECK_WEBUI_SUBMODULE_DIR "${CMAKE_SOURCE_DIR}/web-ui")
+set(ONAIRDECK_WEBUI_SUBMODULE_DIR "${CMAKE_SOURCE_DIR}/vendor/web-ui")
 if(NOT WEBUI_DIST_PATH)
     set(_WEBUI_DIST_AUTODETECT "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/dist")
     if(EXISTS "${_WEBUI_DIST_AUTODETECT}")

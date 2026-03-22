@@ -17,7 +17,7 @@
 ## 🔗 Related Repositories
 
 - Core app: [`andpia/on-air-deck`](https://github.com/andpia/on-air-deck)
-- Frontend UI companion (required for Web UI development and Release bundle generation): [`andpia/on-air-deck-figma`](https://github.com/andpia/on-air-deck-figma), tracked here as the `web-ui/` submodule
+- Frontend UI companion (required for Web UI development and Release bundle generation): [`andpia/on-air-deck-figma`](https://github.com/andpia/on-air-deck-figma), tracked here as the `vendor/web-ui/` submodule
 
 ## 🚀 Building the Project
 
@@ -35,7 +35,7 @@ OnAirDeck uses **CMake** for modern, cross-platform dependency management.
    ```
 
 3. **Release build**:
-   Build `web-ui/dist` first (or pass `WEBUI_DIST_PATH` to an external dist), then:
+   Build `vendor/web-ui/dist` first (or pass `WEBUI_DIST_PATH` to an external dist), then:
    ```bash
    cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release
    cmake --build out/build/release --config Release
@@ -57,9 +57,9 @@ The application embeds the **On Air Deck Web UI** (from [`andpia/on-air-deck-fig
 
 In **Debug** builds the app automatically connects to the Vite dev server so UI changes appear instantly without recompiling JUCE.
 
-1. Start the Vite dev server from the `web-ui/` submodule:
+1. Start the Vite dev server from the `vendor/web-ui/` submodule:
    ```bash
-   cd web-ui
+   cd vendor/web-ui
    npm install
    npm run dev          # starts http://localhost:5173 by default
    ```
@@ -91,7 +91,7 @@ In **Debug** builds the app automatically connects to the Vite dev server so UI 
    cmake --build out/build/release --config Release
    ```
 
-   If your frontend dist is outside `web-ui/dist`, point CMake at that folder explicitly:
+   If your frontend dist is outside `vendor/web-ui/dist`, point CMake at that folder explicitly:
    ```bash
    cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release \
          -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist
@@ -105,7 +105,7 @@ In **Debug** builds the app automatically connects to the Vite dev server so UI 
 
 | Variable | Default | Description |
 |---|---|---|
-| `WEBUI_DIST_PATH` | `web-ui/dist` when present | Path to the Vite `dist/` folder. If not set explicitly, CMake auto-detects the submodule build output when available. |
+| `WEBUI_DIST_PATH` | `vendor/web-ui/dist` when present | Path to the Vite `dist/` folder. If not set explicitly, CMake auto-detects the submodule build output when available. |
 | `WEBUI_DEV_SERVER_URL` | `http://localhost:5173` | URL loaded in **Debug** builds. |
 
 ## 📚 Documentation
@@ -146,7 +146,7 @@ bash scripts/release.sh
 
 Optional environment variables:
 
-- `FRONTEND_DIR`: path to frontend repo (default: `web-ui`, fallback: `../on-air-deck-figma`)
+- `FRONTEND_DIR`: path to frontend repo (default: `vendor/web-ui`, fallback: `../on-air-deck-figma`)
 - `BUILD_DIR`: output build directory (default: `out/build/release`)
 - `DIST_DIR`: frontend dist path (default: `$FRONTEND_DIR/dist`)
 

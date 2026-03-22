@@ -4,8 +4,8 @@
 
 - CMake 3.22 or newer
 - A C++17-capable compiler
-- Git submodules initialized so the `vendor/JUCE/` and `web-ui/` directories are populated
-- Access to the companion frontend repository `andpia/on-air-deck-figma` (included as `web-ui/` submodule by default)
+- Git submodules initialized so the `vendor/JUCE/` and `vendor/web-ui/` directories are populated
+- Access to the companion frontend repository `andpia/on-air-deck-figma` (included as `vendor/web-ui/` submodule by default)
   - Debug workflow: run the Vite development server
   - Release workflow: build `dist/` and pass it through `WEBUI_DIST_PATH`
 
@@ -35,10 +35,10 @@ In Debug, the app loads the Web UI from the Vite development server configured b
 
 ## Release Build
 
-Build the frontend bundle first in the `web-ui/` submodule. CMake auto-detects `web-ui/dist` when available:
+Build the frontend bundle first in the `vendor/web-ui/` submodule. CMake auto-detects `vendor/web-ui/dist` when available:
 
 ```bash
-cd web-ui
+cd vendor/web-ui
 npm install
 npm run build
 cd ..
@@ -67,7 +67,7 @@ sudo apt-get update && sudo apt-get install libasound2-dev libx11-dev libxrandr-
 | Variable | Default | Description |
 | --- | --- | --- |
 | `WEBUI_DEV_SERVER_URL` | `http://localhost:5173` | URL used by Debug builds for the embedded frontend. |
-| `WEBUI_DIST_PATH` | auto (`web-ui/dist` if present) | Path to the built frontend assets for Release packaging. |
+| `WEBUI_DIST_PATH` | auto (`vendor/web-ui/dist` if present) | Path to the built frontend assets for Release packaging. |
 | `ONAIRDECK_USE_CURL` | `ON` | Enables CURL support when available. |
 | `ONAIRDECK_ENABLE_SANITIZERS` | `ON` | Enables AddressSanitizer in Debug on supported toolchains. |
 | `ONAIRDECK_UNITY_BUILD` | `OFF` | Enables CMake unity builds for faster compilation. |

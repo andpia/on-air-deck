@@ -15,7 +15,7 @@ http://localhost:5173
 Start the frontend from the companion repository:
 
 ```bash
-cd web-ui
+cd vendor/web-ui
 npm install
 npm run dev
 ```
@@ -25,7 +25,7 @@ If you keep the frontend repository outside this project, use that external path
 If Vite runs on a different port, reconfigure CMake:
 
 ```bash
-cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug \
+cmake -S . -B out/build/debug -DCMAKE_BUILD_TYPE=Debug \
   -DWEBUI_DEV_SERVER_URL=http://localhost:3000
 ```
 

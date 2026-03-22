@@ -5,8 +5,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 if [[ -n "${FRONTEND_DIR:-}" ]]; then
 	FRONTEND_DIR="$FRONTEND_DIR"
-elif [[ -d "$ROOT_DIR/web-ui" ]]; then
-	FRONTEND_DIR="$ROOT_DIR/web-ui"
+elif [[ -d "$ROOT_DIR/vendor/web-ui" ]]; then
+	FRONTEND_DIR="$ROOT_DIR/vendor/web-ui"
 else
 	FRONTEND_DIR="$ROOT_DIR/../on-air-deck-figma"
 fi

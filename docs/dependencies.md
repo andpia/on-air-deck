@@ -17,9 +17,9 @@ This page lists external repositories required to build and run OnAirDeck workfl
 - Repository: [andpia/on-air-deck-figma](https://github.com/andpia/on-air-deck-figma)
 - Usage: Vite/React frontend loaded in the embedded `WebBrowserComponent`.
 - Integration:
-  - Tracked as git submodule at `web-ui/`.
+  - Tracked as git submodule at `vendor/web-ui/`.
   - Debug: run the frontend dev server and configure `WEBUI_DEV_SERVER_URL` if needed.
-  - Release: CMake auto-detects `web-ui/dist` when present, or use `-DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist`.
+  - Release: CMake auto-detects `vendor/web-ui/dist` when present, or use `-DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist`.
 - Impact:
   - Required for live UI development in Debug.
   - Required to package static Web UI assets in Release.
