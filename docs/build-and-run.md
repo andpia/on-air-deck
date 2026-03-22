@@ -62,6 +62,19 @@ On Linux, install the required system dependencies before configuring:
 sudo apt-get update && sudo apt-get install libasound2-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libgl1-mesa-dev libwebkitgtk-6.0-dev libgtk-3-dev libcurl4-openssl-dev
 ```
 
+## Cleanup
+
+For routine cleanup of generated files:
+
+```bash
+bash scripts/clean.sh safe
+```
+
+Other modes:
+
+- `bash scripts/clean.sh full`: removes `out/`, `vendor/web-ui/dist`, and `vendor/web-ui/node_modules`
+- `bash scripts/clean.sh pristine --yes`: removes all untracked and ignored files in the main repo and submodules
+
 ## Useful CMake Variables
 
 | Variable | Default | Description |

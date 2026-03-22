@@ -150,6 +150,20 @@ Optional environment variables:
 - `BUILD_DIR`: output build directory (default: `out/build/release`)
 - `DIST_DIR`: frontend dist path (default: `$FRONTEND_DIR/dist`)
 
+## 🧹 Cleaning Generated Files
+
+Use the cleanup script for common reset scenarios:
+
+```bash
+bash scripts/clean.sh safe
+```
+
+Available modes:
+
+- `safe`: removes `out/`
+- `full`: removes `out/`, `vendor/web-ui/dist`, and `vendor/web-ui/node_modules`
+- `pristine --yes`: runs `git clean -fdx` in the repo and all submodules
+
 Legacy generated output folders `build-debug`, `build-release`, and `site` are deprecated in favor of the `out/` structure.
 
 ---
