@@ -23,16 +23,23 @@
 
 OnAirDeck uses **CMake** for modern, cross-platform dependency management.
 
-1.  **Clone the repository**:
+1. **Clone the repository**:
     ```bash
     git clone --recursive https://github.com/andpia/on-air-deck.git
     cd on-air-deck
     ```
-2.  **Generate and Build**:
-    ```bash
-   cmake -B build-release -DCMAKE_BUILD_TYPE=Release
+2. **Generate and Build (Quick Start - Debug)**:
+   ```bash
+   cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug
+   cmake --build build-debug --config Debug
+   ```
+
+3. **Release build**:
+   Build `web-ui/dist` first (or pass `WEBUI_DIST_PATH` to an external dist), then:
+   ```bash
+   cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
    cmake --build build-release --config Release
-    ```
+   ```
 
 ### Linux Dependencies
 If compiling on Linux, ensure you have the required development libraries installed:
@@ -58,8 +65,7 @@ In **Debug** builds the app automatically connects to the Vite dev server so UI 
    ```
 2. Build OnAirDeck in **Debug** mode and run it:
    ```bash
-   cd on-air-deck
-   cmake -B build-debug -DCMAKE_BUILD_TYPE=Debug
+   cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug
    cmake --build build-debug --config Debug
    ./build-debug/OnAirDeck_artefacts/Debug/OnAirDeck   # path varies by OS
    ```
@@ -79,9 +85,15 @@ In **Debug** builds the app automatically connects to the Vite dev server so UI 
    > export default defineConfig({ base: './', ... })
    > ```
 
-2. Build OnAirDeck in **Release**, pointing CMake at the dist folder:
+2. Build OnAirDeck in **Release**:
    ```bash
-   cmake -B build-release -DCMAKE_BUILD_TYPE=Release \
+   cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release
+   cmake --build build-release --config Release
+   ```
+
+   If your frontend dist is outside `web-ui/dist`, point CMake at that folder explicitly:
+   ```bash
+   cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release \
          -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist
    cmake --build build-release --config Release
    ```
