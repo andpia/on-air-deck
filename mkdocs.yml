@@ -30,3 +30,5 @@ markdown_extensions:
 
 plugins:
   - search
+
+exclude_docs: repo-migration-sequence.md

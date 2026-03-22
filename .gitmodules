@@ -1,6 +1,3 @@
 [submodule "JUCE"]
 	path = vendor/JUCE
 	url = https://github.com/juce-framework/JUCE.git
-[submodule "web-ui"]
-	path = vendor/web-ui
-	url = https://github.com/andpia/on-air-deck-figma.git
