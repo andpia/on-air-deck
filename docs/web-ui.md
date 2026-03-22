@@ -23,7 +23,7 @@ npm run dev
 If Vite runs on a different port, reconfigure CMake:
 
 ```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug \
+cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug \
   -DWEBUI_DEV_SERVER_URL=http://localhost:3000
 ```
 

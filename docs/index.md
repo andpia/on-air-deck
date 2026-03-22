@@ -27,8 +27,8 @@ OnAirDeck is a JUCE-based radio automation console and web streaming application
 ```bash
 git clone --recursive https://github.com/andpia/on-air-deck.git
 cd on-air-deck
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build --config Debug
+cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug
+cmake --build build-debug --config Debug
 ```
 
 If you want live UI reload in Debug, start the frontend dev server from the companion repository before launching the app.

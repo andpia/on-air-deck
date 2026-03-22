@@ -22,8 +22,8 @@ git submodule update --init --recursive
 ## Debug Build
 
 ```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build --config Debug
+cmake -S . -B build-debug -DCMAKE_BUILD_TYPE=Debug
+cmake --build build-debug --config Debug
 ```
 
 In Debug, the app loads the Web UI from the Vite development server configured by `WEBUI_DEV_SERVER_URL`.
@@ -33,9 +33,9 @@ In Debug, the app loads the Web UI from the Vite development server configured b
 Build the frontend bundle first in the UI repository, then point CMake at the generated `dist/` directory:
 
 ```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release \
   -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist
-cmake --build build --config Release
+cmake --build build-release --config Release
 ```
 
 ## Linux Packages
