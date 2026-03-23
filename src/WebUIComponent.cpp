@@ -73,11 +73,7 @@ void WebUIComponent::handleBridgeAction (const juce::String& action,
 
 juce::String WebUIComponent::getStartupURL()
 {
-#if JUCE_DEBUG
-    // Development: connect to the Vite dev server for hot-reload support.
-    return WEBUI_DEV_SERVER_URL;
-#else
-    // Production: load the bundled index.html from the WebUI/ folder.
+    // Prefer the bundled index.html from the WebUI/ folder when present.
     juce::File webUIDir;
 
   #if JUCE_MAC
@@ -95,6 +91,10 @@ juce::String WebUIComponent::getStartupURL()
     if (indexFile.existsAsFile())
         return juce::URL (indexFile).toString (false);
 
+#if JUCE_DEBUG
+    // Development fallback: use the Vite dev server for hot-reload support.
+    return WEBUI_DEV_SERVER_URL;
+#else
     // Fallback: inline error page shown when the WebUI folder is missing.
     return "data:text/html,<h2>Web UI not found</h2>"
            "<p>Expected index.html at: " + indexFile.getFullPathName() + "</p>"

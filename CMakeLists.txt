@@ -89,6 +89,49 @@ else()
     endif()
 endif()
 
+# Linux-specific: validate that pkg-config can find required JUCE dependencies
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    message(STATUS "Linux detected: checking for JUCE dependencies via pkg-config...")
+    find_package(PkgConfig REQUIRED)
+
+    # Check for ALSA (audio)
+    pkg_check_modules(ALSA QUIET alsa)
+    if(NOT ALSA_FOUND)
+        message(SEND_ERROR
+            "ALSA development package not found.\n"
+            "On Ubuntu 24.04 LTS, install with:\n"
+            "  sudo apt-get install libasound2-dev\n"
+            "Or run the setup script:\n"
+            "  bash scripts/setup-linux.sh"
+        )
+    endif()
+
+    # Check for OpenGL (graphics)
+    pkg_check_modules(GL QUIET gl)
+    if(NOT GL_FOUND)
+        message(SEND_ERROR
+            "OpenGL development package not found.\n"
+            "On Ubuntu 24.04 LTS, install with:\n"
+            "  sudo apt-get install libgl-dev\n"
+            "Or run the setup script:\n"
+            "  bash scripts/setup-linux.sh"
+        )
+    endif()
+
+    # Check for WebKit2GTK and GTK3 (browser component + GUI)
+    pkg_check_modules(WEBKIT2GTK QUIET webkit2gtk-4.1)
+    pkg_check_modules(GTK3 QUIET gtk+-x11-3.0)
+    if(NOT WEBKIT2GTK_FOUND OR NOT GTK3_FOUND)
+        message(SEND_ERROR
+            "GTK3 or WebKit2GTK development packages not found.\n"
+            "On Ubuntu 24.04 LTS, install with:\n"
+            "  sudo apt-get install libgtk-3-dev libwebkit2gtk-4.1-dev\n"
+            "Or run the setup script:\n"
+            "  bash scripts/setup-linux.sh"
+        )
+    endif()
+endif()
+
 target_link_libraries(OnAirDeck PRIVATE
     juce::juce_core
     juce::juce_audio_basics

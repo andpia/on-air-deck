@@ -4,7 +4,8 @@ OnAirDeck embeds the frontend inside the native JUCE application using `juce::We
 
 ## Debug Mode
 
-Debug builds connect to a Vite development server for live reload.
+Debug builds first try loading bundled static assets from `WebUI/index.html`.
+If they are not available, they connect to a Vite development server for live reload.
 
 Default server URL:
 

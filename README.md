@@ -44,8 +44,17 @@ OnAirDeck uses **CMake** for modern, cross-platform dependency management.
 ### Linux Dependencies
 If compiling on Linux, ensure you have the required development libraries installed:
 ```bash
-sudo apt-get update && sudo apt-get install libasound2-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libgl1-mesa-dev libwebkitgtk-6.0-dev libgtk-3-dev libcurl4-openssl-dev
+sudo apt-get update && sudo apt-get install libasound2-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libgl-dev libwebkit2gtk-4.1-dev libgtk-3-dev libcurl4-openssl-dev
 ```
+
+#### Ubuntu 24.04 LTS Quick Setup
+
+For a complete automated setup on Ubuntu 24.04 LTS:
+```bash
+bash scripts/setup-linux.sh
+```
+
+This script installs all required JUCE dependencies and system libraries needed for OnAirDeck compilation.
 
 ---
 
@@ -55,7 +64,7 @@ The application embeds the **On Air Deck Web UI** (from [`andpia/on-air-deck-fig
 
 ### Development Workflow (Hot Reload)
 
-In **Debug** builds the app automatically connects to the Vite dev server so UI changes appear instantly without recompiling JUCE.
+In **Debug** builds the app first loads bundled static assets (if available), and otherwise connects to the Vite dev server so UI changes appear instantly without recompiling JUCE.
 
 1. Start the Vite dev server from the `vendor/web-ui/` submodule:
    ```bash
@@ -77,7 +86,7 @@ In **Debug** builds the app automatically connects to the Vite dev server so UI 
 
 1. Build the frontend static bundle:
    ```bash
-   cd web-ui
+   cd vendor/web-ui
    npm run build        # outputs to dist/
    ```
    > **Vite base path**: the frontend must set `base: './'` in `vite.config.*` so that asset paths are relative and work when loaded via `file://`. Add or confirm this line in `vite.config.ts`:

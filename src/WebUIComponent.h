@@ -7,8 +7,9 @@
     @brief Embeds the On Air Deck Web UI using JUCE's WebBrowserComponent.
 
     Behaviour:
-    - Debug builds: loads the Vite dev server at WEBUI_DEV_SERVER_URL
-      (default: http://localhost:5173) to support hot-reload.
+    - Debug builds: first tries bundled index.html from WebUI/ and falls
+      back to the Vite dev server at WEBUI_DEV_SERVER_URL
+      (default: http://localhost:5173) for hot-reload.
     - Release builds: loads index.html from a WebUI/ folder placed next to
       the executable (or in Contents/Resources/WebUI/ on macOS .app bundles).
       Falls back to an inline error page when the file cannot be found.
