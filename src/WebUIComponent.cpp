@@ -1,6 +1,99 @@
 #include "WebUIComponent.h"
 
+#include <unordered_map>
+
+juce::File WebUIComponent::getBundledWebUIDirectory()
+{
+   #if JUCE_MAC
+    return juce::File::getSpecialLocation (juce::File::currentApplicationFile)
+        .getChildFile ("Contents/Resources/WebUI");
+   #else
+    return juce::File::getSpecialLocation (juce::File::currentExecutableFile)
+        .getSiblingFile ("WebUI");
+   #endif
+}
+
+std::optional<juce::WebBrowserComponent::Resource> WebUIComponent::provideWebUIResource (const juce::String& path)
+{
+    const auto webUIDir = getBundledWebUIDirectory();
+
+    if (! webUIDir.isDirectory())
+        return std::nullopt;
+
+    auto normalized = path.upToFirstOccurrenceOf ("?", false, false);
+
+    if (normalized.isEmpty() || normalized == "/")
+        normalized = "/index.html";
+
+    while (normalized.startsWithChar ('/'))
+        normalized = normalized.substring (1);
+
+    if (normalized.contains (".."))
+        return std::nullopt;
+
+    const auto requestedFile = webUIDir.getChildFile (normalized);
+
+    if (! requestedFile.existsAsFile())
+        return std::nullopt;
+
+    juce::MemoryBlock block;
+    if (! requestedFile.loadFileAsData (block))
+        return std::nullopt;
+
+    static const std::unordered_map<std::string, juce::String> mimeByExtension {
+        { ".html", "text/html; charset=utf-8" },
+        { ".js", "text/javascript; charset=utf-8" },
+        { ".mjs", "text/javascript; charset=utf-8" },
+        { ".css", "text/css; charset=utf-8" },
+        { ".json", "application/json; charset=utf-8" },
+        { ".map", "application/json; charset=utf-8" },
+        { ".svg", "image/svg+xml" },
+        { ".png", "image/png" },
+        { ".jpg", "image/jpeg" },
+        { ".jpeg", "image/jpeg" },
+        { ".gif", "image/gif" },
+        { ".webp", "image/webp" },
+        { ".ico", "image/x-icon" },
+        { ".woff", "font/woff" },
+        { ".woff2", "font/woff2" },
+        { ".ttf", "font/ttf" },
+        { ".otf", "font/otf" }
+    };
+
+    const auto extension = requestedFile.getFileExtension().toLowerCase().toStdString();
+
+    const auto mimeIt = mimeByExtension.find (extension);
+    const auto mime = (mimeIt != mimeByExtension.end()) ? mimeIt->second : juce::String ("application/octet-stream");
+
+    const auto* data = static_cast<const std::byte*> (block.getData());
+
+    juce::WebBrowserComponent::Resource resource;
+    resource.mimeType = mime;
+    resource.data.assign (data, data + block.getSize());
+
+    return resource;
+}
+
+juce::WebBrowserComponent::Options WebUIComponent::createBrowserOptions()
+{
+    auto options = juce::WebBrowserComponent::Options {}
+        .withResourceProvider (
+            [] (const juce::String& path)
+            {
+                return provideWebUIResource (path);
+            });
+
+   #if JUCE_MAC || JUCE_IOS
+    options = options.withAppleWkWebViewOptions (
+        juce::WebBrowserComponent::Options::AppleWkWebView {}
+            .withAllowAccessToEnclosingDirectory (true));
+   #endif
+
+    return options;
+}
+
 WebUIComponent::WebUIComponent()
+    : juce::WebBrowserComponent (createBrowserOptions())
 {
     goToURL (getStartupURL());
 }
@@ -39,6 +132,20 @@ void WebUIComponent::pageFinishedLoading (const juce::String& url)
     DBG ("WebUIComponent: page loaded -> " + url);
 }
 
+bool WebUIComponent::pageLoadHadNetworkError (const juce::String& errorInfo)
+{
+    const auto escapedError = juce::URL::addEscapeChars (errorInfo, false);
+
+    goToURL ("data:text/html;charset=UTF-8,"
+             "<html><body style='font-family:sans-serif;padding:24px'>"
+             "<h2>Web UI load failed</h2>"
+             "<p>The embedded browser could not load one or more resources.</p>"
+             "<pre style='white-space:pre-wrap'>" + escapedError + "</pre>"
+             "</body></html>");
+
+    return false;
+}
+
 void WebUIComponent::handleBridgeAction (const juce::String& action,
                                          const juce::StringPairArray& params)
 {
@@ -73,23 +180,12 @@ void WebUIComponent::handleBridgeAction (const juce::String& action,
 
 juce::String WebUIComponent::getStartupURL()
 {
-    // Prefer the bundled index.html from the WebUI/ folder when present.
-    juce::File webUIDir;
-
-  #if JUCE_MAC
-    // On macOS, look inside the .app bundle's Resources folder.
-    webUIDir = juce::File::getSpecialLocation (juce::File::currentApplicationFile)
-                   .getChildFile ("Contents/Resources/WebUI");
-  #else
-    // On Windows and Linux, look next to the executable.
-    webUIDir = juce::File::getSpecialLocation (juce::File::currentExecutableFile)
-                   .getSiblingFile ("WebUI");
-  #endif
-
+    // Prefer bundled resources served through JUCE's internal backend origin.
+    const auto webUIDir = getBundledWebUIDirectory();
     const juce::File indexFile = webUIDir.getChildFile ("index.html");
 
     if (indexFile.existsAsFile())
-        return juce::URL (indexFile).toString (false);
+        return juce::WebBrowserComponent::getResourceProviderRoot();
 
 #if JUCE_DEBUG
     // Development fallback: use the Vite dev server for hot-reload support.

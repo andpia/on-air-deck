@@ -89,7 +89,7 @@ In **Debug** builds the app first loads bundled static assets (if available), an
    cd vendor/web-ui
    npm run build        # outputs to dist/
    ```
-   > **Vite base path**: the frontend must set `base: './'` in `vite.config.*` so that asset paths are relative and work when loaded via `file://`. Add or confirm this line in `vite.config.ts`:
+   > **Vite base path**: the frontend must set `base: './'` in `vite.config.*` so that asset paths are relative and work across local origins (`file://` and `juce://`). Confirm this line exists in `vite.config.ts`:
    > ```ts
    > export default defineConfig({ base: './', ... })
    > ```
@@ -109,6 +109,8 @@ In **Debug** builds the app first loads bundled static assets (if available), an
    CMake will copy the Web UI to the correct location automatically:
    - **macOS**: `OnAirDeck.app/Contents/Resources/WebUI/`
    - **Windows / Linux**: `WebUI/` next to the executable
+
+   The Web UI is therefore bundled with the Release app package, but not embedded directly into the executable binary. At runtime, the app serves these assets via JUCE's internal `juce://` resource origin.
 
 ### CMake Variables
 

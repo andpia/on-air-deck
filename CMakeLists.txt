@@ -40,6 +40,15 @@ endif()
 set(WEBUI_DEV_SERVER_URL "http://localhost:5173" CACHE STRING
     "Vite dev server URL (used in Debug builds for hot-reload support)")
 
+# Ensure JUCE submodule is available with a clear actionable error.
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/vendor/JUCE/CMakeLists.txt")
+    message(FATAL_ERROR
+        "JUCE submodule not found at vendor/JUCE.\n"
+        "Initialize submodules and retry:\n"
+        "  git submodule update --init --recursive"
+    )
+endif()
+
 # Add JUCE as subdirectory
 add_subdirectory(vendor/JUCE)
 
@@ -219,9 +228,18 @@ if(WEBUI_DIST_PATH AND EXISTS "${WEBUI_DIST_PATH}")
     message(STATUS "WebUI dist: ${WEBUI_DIST_PATH} -> copied post-build")
 else()
     if(WEBUI_DIST_PATH)
-        message(WARNING "WEBUI_DIST_PATH is set but the path does not exist: ${WEBUI_DIST_PATH}")
+        message(WARNING
+            "WEBUI_DIST_PATH is set but the path does not exist: ${WEBUI_DIST_PATH}\n"
+            "Build the frontend first, for example:\n"
+            "  cd vendor/web-ui && npm install && npm run build"
+        )
     else()
-        message(STATUS "WebUI dist: not configured (set -DWEBUI_DIST_PATH=<path> to enable)")
+        message(STATUS
+            "WebUI dist: not configured.\n"
+            "Release builds should provide a pre-built dist folder.\n"
+            "Default expected path: vendor/web-ui/dist\n"
+            "Override with: -DWEBUI_DIST_PATH=<path-to-dist>"
+        )
     endif()
 endif()
 

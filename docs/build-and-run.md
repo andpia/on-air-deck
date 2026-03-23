@@ -46,6 +46,8 @@ cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release
 cmake --build out/build/release --config Release
 ```
 
+Release packaging copies the frontend files next to the app or inside the `.app` bundle; it does not embed them directly into the executable binary. At runtime, JUCE serves those files from the internal `juce://` resource origin.
+
 If your frontend lives outside this repository, point CMake at the generated `dist/` directory explicitly:
 
 ```bash
