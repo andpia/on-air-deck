@@ -9,11 +9,12 @@ CONFIRM_FLAG="${2:-}"
 usage() {
 	cat <<'EOF'
 Usage:
-  bash scripts/clean.sh [safe|full|pristine] [--yes]
+	bash scripts/clean.sh [safe|full|deep|pristine] [--yes]
 
 Modes:
   safe      Remove generated output under out/
   full      Remove out/ plus frontend dist/ and node_modules/
+	deep      Remove full output plus legacy build/ and known submodule build folders
   pristine  Run git clean -fdx in the repo and all submodules
 
 Notes:
@@ -42,6 +43,13 @@ run_full_clean() {
 	remove_path "$ROOT_DIR/vendor/web-ui/node_modules"
 }
 
+run_deep_clean() {
+	run_full_clean
+	remove_path "$ROOT_DIR/build"
+	remove_path "$ROOT_DIR/vendor/JUCE/examples/Build"
+	remove_path "$ROOT_DIR/vendor/JUCE/extras/Build"
+}
+
 run_pristine_clean() {
 	if [[ "$CONFIRM_FLAG" != "--yes" ]]; then
 		echo "Refusing to run pristine clean without --yes"
@@ -62,6 +70,9 @@ case "$MODE" in
 		;;
 	full)
 		run_full_clean
+		;;
+	deep)
+		run_deep_clean
 		;;
 	pristine)
 		run_pristine_clean

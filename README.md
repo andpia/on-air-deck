@@ -173,6 +173,7 @@ Available modes:
 
 - `safe`: removes `out/`
 - `full`: removes `out/`, `vendor/web-ui/dist`, and `vendor/web-ui/node_modules`
+- `deep`: removes `full` targets plus legacy `build/` and known JUCE submodule build folders
 - `pristine --yes`: runs `git clean -fdx` in the repo and all submodules
 
 Legacy generated output folders `build-debug`, `build-release`, and `site` are deprecated in favor of the `out/` structure.

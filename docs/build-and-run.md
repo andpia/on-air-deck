@@ -75,6 +75,7 @@ bash scripts/clean.sh safe
 Other modes:
 
 - `bash scripts/clean.sh full`: removes `out/`, `vendor/web-ui/dist`, and `vendor/web-ui/node_modules`
+- `bash scripts/clean.sh deep`: removes `full` targets plus legacy `build/` and known JUCE submodule build folders
 - `bash scripts/clean.sh pristine --yes`: removes all untracked and ignored files in the main repo and submodules
 
 ## Useful CMake Variables
