@@ -2,7 +2,7 @@
 
 ### Professional Web Radio Engine: Live Streaming, Playlist Management & Broadcast Tools
 
-**OnAirDeck** is a lightweight, high-performance **radio automation** console and **web streaming** suite built with the **JUCE** framework. It bridges the gap between digital music playlists and live vocal performance, providing a professional "deck" experience for modern **broadcasters**.
+**OnAirDeck** is a lightweight, high-performance **radio automation** console and **web streaming** suite built with the **JUCE 8** framework. It bridges the gap between digital music playlists and live vocal performance, providing a professional "deck" experience for modern **broadcasters**.
 
 ---
 
@@ -22,6 +22,7 @@
 ## 🚀 Building the Project
 
 OnAirDeck uses **CMake** for modern, cross-platform dependency management.
+> **JUCE 8 required** — OnAirDeck uses the `WebBrowserComponent::Options::withResourceProvider` API introduced in JUCE 8.  The `vendor/JUCE` submodule is pinned to JUCE 8.0.12 or later.  On Windows, the bundled resource provider is available when the [Microsoft WebView2 SDK](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) is installed; otherwise the app falls back to the legacy IE backend and loads web assets from the file system directly.
 
 1. **Clone the repository**:
     ```bash
@@ -221,5 +222,30 @@ This project is licensed under the **GNU GPLv3**. See the `LICENSE` file for mor
 
 ---
 
-**Made with ❤️, JUCE and a passion for Radio Broadcasting**
+## 🔧 Troubleshooting
+
+### JUCE 8 Upgrade Notes
+
+| Platform | Web Backend | Resource Provider | Notes |
+|---|---|---|---|
+| **macOS** | WebKit (WKWebView) | ✅ Available | Assets served via `juce://juce.backend/` |
+| **Linux** | WebKit2GTK | ✅ Available | Assets served via `juce://juce.backend/` |
+| **Windows + WebView2** | Edge/Chromium | ✅ Available | Assets served via `https://juce.backend/` |
+| **Windows (no WebView2)** | Internet Explorer | ❌ Not available | Assets loaded via `file://` URL from disk |
+
+**Enabling WebView2 on Windows** (recommended for full JUCE 8 feature set):
+1. Install the [Microsoft WebView2 SDK NuGet package](https://www.nuget.org/packages/Microsoft.Web.WebView2/) into your local NuGet package directory.
+2. Run CMake – `FindWebView2.cmake` (from JUCE) will detect the package automatically and enable `JUCE_USE_WIN_WEBVIEW2=1`.
+
+If the SDK is absent CMake prints `WebView2 SDK: not found -> using legacy IE browser backend` and the build continues without WebView2.
+
+### `withResourceProvider` compile error on Windows
+
+If you see `error C2039: 'withResourceProvider': is not a member of 'juce::WebBrowserComponent::Options'`, it means your JUCE copy is older than JUCE 8 or WebView2 is not enabled.  Make sure:
+- `vendor/JUCE` is at JUCE 8.0.12 or newer (`git submodule update --init --recursive`)
+- On Windows, install the WebView2 SDK as described above (or accept the IE fallback)
+
+---
+
+**Made with ❤️, JUCE 8 and a passion for Radio Broadcasting**
 

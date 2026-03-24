@@ -4,10 +4,11 @@
 
 - CMake 3.22 or newer
 - A C++17-capable compiler
-- Git submodules initialized so the `vendor/JUCE/` and `vendor/web-ui/` directories are populated
+- **JUCE 8.0.12 or later** — Git submodules initialized so the `vendor/JUCE/` and `vendor/web-ui/` directories are populated
 - Access to the companion frontend repository `andpia/on-air-deck-figma` (included as `vendor/web-ui/` submodule by default)
   - Debug workflow: run the Vite development server
   - Release workflow: build `dist/` and pass it through `WEBUI_DIST_PATH`
+- **Windows only (optional)**: [Microsoft WebView2 SDK](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) NuGet package to enable the Chromium-based backend and the bundled resource provider.  Without it the IE backend is used and assets are loaded via `file://`.
 
 Clone the repository with submodules:
 

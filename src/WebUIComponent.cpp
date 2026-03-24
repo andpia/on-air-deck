@@ -76,12 +76,18 @@ std::optional<juce::WebBrowserComponent::Resource> WebUIComponent::provideWebUIR
 
 juce::WebBrowserComponent::Options WebUIComponent::createBrowserOptions()
 {
-    auto options = juce::WebBrowserComponent::Options {}
-        .withResourceProvider (
-            [] (const juce::String& path)
-            {
-                return provideWebUIResource (path);
-            });
+    auto options = juce::WebBrowserComponent::Options {};
+
+   // withResourceProvider is only available on macOS/iOS/Linux and Windows+WebView2.
+   // On Windows without WebView2 (IE backend) the macro evaluates to 0 and the API
+   // does not exist, so we fall back to loading the files via a file:// URL instead.
+   #if JUCE_WEB_BROWSER_RESOURCE_PROVIDER_AVAILABLE
+    options = options.withResourceProvider (
+        [] (const juce::String& path)
+        {
+            return provideWebUIResource (path);
+        });
+   #endif
 
    #if JUCE_MAC || JUCE_IOS
     options = options.withAppleWkWebViewOptions (
@@ -180,12 +186,20 @@ void WebUIComponent::handleBridgeAction (const juce::String& action,
 
 juce::String WebUIComponent::getStartupURL()
 {
-    // Prefer bundled resources served through JUCE's internal backend origin.
     const auto webUIDir = getBundledWebUIDirectory();
     const juce::File indexFile = webUIDir.getChildFile ("index.html");
 
     if (indexFile.existsAsFile())
+    {
+       // On platforms with resource provider support the files are served through
+       // JUCE's internal backend origin (juce:// or https://juce.backend/).
+       // On Windows with the IE backend (no WebView2) we fall back to the file:// URL.
+       #if JUCE_WEB_BROWSER_RESOURCE_PROVIDER_AVAILABLE
         return juce::WebBrowserComponent::getResourceProviderRoot();
+       #else
+        return indexFile.getURL().toString (false);
+       #endif
+    }
 
 #if JUCE_DEBUG
     // Development fallback: use the Vite dev server for hot-reload support.
