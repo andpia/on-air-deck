@@ -163,9 +163,30 @@ if(USE_CURL)
     target_link_libraries(OnAirDeck PRIVATE CURL::libcurl)
 endif()
 
+# On Windows, try to locate the WebView2 SDK so that the modern Chromium-based
+# backend and the ResourceProvider API (JUCE 8) are available.  The SDK is NOT
+# required; when it is absent the project falls back to the legacy IE backend
+# which still compiles and runs, just without the resource-provider feature.
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/vendor/JUCE/extras/Build/CMake")
+    find_package(WebView2 QUIET)
+    if(WebView2_FOUND)
+        set(USE_WEBVIEW2 ON)
+        message(STATUS "WebView2 SDK: found -> enabling JUCE_USE_WIN_WEBVIEW2")
+        target_include_directories(OnAirDeck PRIVATE "${WebView2_include_dir}")
+        target_link_libraries(OnAirDeck PRIVATE "${WebView2_library}")
+    else()
+        set(USE_WEBVIEW2 OFF)
+        message(STATUS "WebView2 SDK: not found -> using legacy IE browser backend (resource provider unavailable)")
+    endif()
+else()
+    set(USE_WEBVIEW2 OFF)
+endif()
+
 target_compile_definitions(OnAirDeck PRIVATE
     JUCE_WEB_BROWSER=1
     JUCE_USE_CURL=${USE_CURL}
+    JUCE_USE_WIN_WEBVIEW2=$<BOOL:${USE_WEBVIEW2}>
     ONAIRDECK_VERSION="${ONAIRDECK_VERSION}"
     ONAIRDECK_COMPANY_NAME="${ONAIRDECK_COMPANY_NAME}"
     WEBUI_DEV_SERVER_URL="${WEBUI_DEV_SERVER_URL}"

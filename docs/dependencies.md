@@ -7,10 +7,12 @@ This page lists external repositories required to build and run OnAirDeck workfl
 ### JUCE
 
 - Repository: [juce-framework/JUCE](https://github.com/juce-framework/JUCE)
+- **Required version: JUCE 8.0.12 or later** (JUCE 8 introduced `WebBrowserComponent::Options::withResourceProvider`, which is used to serve the bundled Web UI without a separate server)
 - Usage: native application framework and platform abstraction layer.
 - Integration: included as a git submodule inside `vendor/JUCE/`.
 - Impact:
   - Required for all Debug and Release native builds.
+  - On Windows, the full resource-provider feature requires the [Microsoft WebView2 SDK](https://developer.microsoft.com/en-us/microsoft-edge/webview2/); without it the app falls back to the IE backend and loads assets via `file://`.
 
 ### OnAirDeck Frontend UI
 
