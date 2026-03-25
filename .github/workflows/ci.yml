@@ -16,6 +16,36 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Debug environment
+        shell: bash
+        run: |
+          echo "Runner OS: $RUNNER_OS"
+          echo "Git:"
+          git --version
+          echo "Repo HEAD:"
+          git rev-parse HEAD
+          echo "Submodules:"
+          git submodule status --recursive || true
+          echo "JUCE submodule HEAD (if present):"
+          if [ -d vendor/JUCE/.git ] || [ -f vendor/JUCE/.git ]; then
+            git -C vendor/JUCE rev-parse HEAD
+            git -C vendor/JUCE remote -v || true
+          else
+            echo "vendor/JUCE is missing or not a git checkout"
+            ls -la vendor || true
+            ls -la vendor/JUCE || true
+          fi
+          echo "CMake:"
+          cmake --version
+          echo "Compiler:"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            cl 2>&1 | head -n 20 || true
+          else
+            c++ --version || true
+            clang++ --version || true
+            g++ --version || true
+          fi
+
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |
