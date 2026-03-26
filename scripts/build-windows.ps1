@@ -11,6 +11,12 @@
     Mirrors the behaviour of scripts/release.sh for Unix, but works natively on
     Windows without a POSIX shell.
 
+    The script automatically installs the Microsoft.Web.WebView2 NuGet SDK if it
+    is not already present in the NuGet global packages cache.  WebView2 is
+    required so that JUCE compiles with the modern Edge/Chromium browser backend
+    (JUCE_USE_WIN_WEBVIEW2=1); without it JUCE falls back to Internet Explorer
+    which cannot render modern React/Vite applications and shows a blank white page.
+
 .PARAMETER FrontendDir
     Path to the frontend source directory.
     Default: vendor/web-ui (submodule) relative to the repository root.
@@ -27,6 +33,12 @@
     Directory where the final ZIP is written.
     Default: out
 
+.PARAMETER WebView2Path
+    Path to the build/native directory of the Microsoft.Web.WebView2 NuGet package
+    (the directory that contains include/WebView2.h).
+    If not provided the script searches the NuGet global packages cache and, if not
+    found there, installs the latest stable version automatically.
+
 .PARAMETER SkipFrontendBuild
     Skip the npm ci / npm run build step (use when dist/ is already present).
 
@@ -41,6 +53,10 @@
 .EXAMPLE
     # Only re-run CMake + native build (frontend already built):
     .\scripts\build-windows.ps1 -SkipFrontendBuild
+
+.EXAMPLE
+    # Use a pre-installed WebView2 NuGet SDK:
+    .\scripts\build-windows.ps1 -WebView2Path C:\webview2-sdk\Microsoft.Web.WebView2.1.0.2651.64\build\native
 #>
 [CmdletBinding()]
 param(
@@ -48,6 +64,7 @@ param(
     [string]$WebUiDistPath = "",
     [string]$BuildDir      = "",
     [string]$OutDir        = "",
+    [string]$WebView2Path  = "",
     [switch]$SkipFrontendBuild
 )
 
@@ -104,6 +121,71 @@ if (-not $SkipFrontendBuild) {
 Assert-Command "cmake"
 
 # ---------------------------------------------------------------------------
+# WebView2 SDK – required for the modern Edge/Chromium browser backend.
+# Without WebView2 SDK JUCE compiles with the legacy IE backend, which cannot
+# render modern React/Vite applications and will show a blank white page.
+# ---------------------------------------------------------------------------
+function Find-WebView2InNuGetCache {
+    $nugetCacheDirs = @(
+        "$env:USERPROFILE\.nuget\packages\microsoft.web.webview2",
+        "$env:LOCALAPPDATA\NuGet\Cache\microsoft.web.webview2"
+    )
+    foreach ($cacheDir in $nugetCacheDirs) {
+        if (Test-Path $cacheDir) {
+            $candidate = Get-ChildItem $cacheDir -Directory |
+                           Sort-Object Name -Descending |
+                           Select-Object -First 1 -ExpandProperty FullName
+            if ($candidate) {
+                $nativePath = Join-Path $candidate "build\native"
+                if (Test-Path (Join-Path $nativePath "include\WebView2.h")) {
+                    return $nativePath
+                }
+            }
+        }
+    }
+    return $null
+}
+
+$WebView2NativePath = $null
+if ($WebView2Path) {
+    # Explicit path provided via parameter
+    if (-not (Test-Path (Join-Path $WebView2Path "include\WebView2.h"))) {
+        Write-Error "WebView2.h not found under the provided -WebView2Path: '$WebView2Path'"
+        exit 1
+    }
+    $WebView2NativePath = $WebView2Path
+    Write-Host "WebView2 SDK : $WebView2NativePath (from -WebView2Path parameter)"
+} else {
+    # Search NuGet global packages cache
+    $WebView2NativePath = Find-WebView2InNuGetCache
+    if ($WebView2NativePath) {
+        Write-Host "WebView2 SDK : $WebView2NativePath (found in NuGet cache)"
+    } else {
+        # Auto-install via NuGet
+        Write-Host "WebView2 SDK not found in NuGet cache. Installing via nuget..." -ForegroundColor Yellow
+        if (-not (Get-Command "nuget" -ErrorAction SilentlyContinue)) {
+            Write-Error "nuget CLI not found. Install it from https://www.nuget.org/downloads or install the WebView2 SDK manually and pass -WebView2Path."
+            exit 1
+        }
+        $wv2TempDir = Join-Path $env:TEMP "webview2-sdk"
+        nuget install Microsoft.Web.WebView2 -OutputDirectory $wv2TempDir -NonInteractive
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "nuget install Microsoft.Web.WebView2 failed (exit code $LASTEXITCODE)."
+            exit 1
+        }
+        $WebView2NativePath = Get-ChildItem "$wv2TempDir\Microsoft.Web.WebView2.*\build\native" -Directory |
+                                Sort-Object Name -Descending |
+                                Select-Object -First 1 -ExpandProperty FullName
+        if (-not $WebView2NativePath -or -not (Test-Path "$WebView2NativePath\include\WebView2.h")) {
+            Write-Error "WebView2 SDK installation failed: WebView2.h not found under '$wv2TempDir'."
+            exit 1
+        }
+        Write-Host "WebView2 SDK : $WebView2NativePath (installed to $wv2TempDir)"
+    }
+}
+Write-Host ""
+
+# ---------------------------------------------------------------------------
 # Step 1 – Build frontend
 # ---------------------------------------------------------------------------
 if (-not $SkipFrontendBuild) {
@@ -141,12 +223,16 @@ Write-Host "Frontend dist OK: $WebUiDistPath"
 # ---------------------------------------------------------------------------
 Write-Host ""
 Write-Host "[2/4] Configuring CMake in '$BuildDir'" -ForegroundColor Green
-$distPathFwd = $WebUiDistPath -replace '\\','/'
+$distPathFwd = $WebUiDistPath  -replace '\\','/'
+$wv2PathFwd  = $WebView2NativePath -replace '\\','/'
+Write-Host "WEBUI_DIST_PATH = $distPathFwd"
+Write-Host "WEBVIEW2_PATH   = $wv2PathFwd"
 Push-Location $RepoRoot
 try {
     cmake -S . -B $BuildDir `
         -DCMAKE_BUILD_TYPE=Release `
-        -DWEBUI_DIST_PATH="$distPathFwd"
+        -DWEBUI_DIST_PATH="$distPathFwd" `
+        -DWEBVIEW2_PATH="$wv2PathFwd"
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 } finally {
     Pop-Location

@@ -166,10 +166,11 @@ if(USE_CURL)
     target_link_libraries(OnAirDeck PRIVATE CURL::libcurl)
 endif()
 
-# On Windows, try to locate the WebView2 SDK so that the modern Chromium-based
-# backend and the ResourceProvider API (JUCE 8) are available.  The SDK is NOT
-# required; when it is absent the project falls back to the legacy IE backend
-# which still compiles and runs, just without the resource-provider feature.
+# On Windows, locate the WebView2 SDK so that the modern Chromium-based
+# backend and the ResourceProvider API (JUCE 8) are available.
+# In Release builds this is required – without WebView2 JUCE falls back to the
+# legacy IE backend which cannot render modern React/Vite applications (white page).
+# Pass -DWEBVIEW2_PATH=<dir>/build/native or let the scripts install it automatically.
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/vendor/JUCE/extras/Build/CMake")
     find_package(WebView2 QUIET)
@@ -180,7 +181,25 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         target_link_libraries(OnAirDeck PRIVATE "${WebView2_library}")
     else()
         set(USE_WEBVIEW2 OFF)
-        message(STATUS "WebView2 SDK: not found -> using legacy IE browser backend (resource provider unavailable)")
+        if(CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT ONAIRDECK_ALLOW_MISSING_WEBUI)
+            message(FATAL_ERROR
+                "Windows Release build requires the Microsoft WebView2 SDK.\n"
+                "Without it JUCE falls back to the legacy Internet Explorer backend, which cannot\n"
+                "render modern React/Vite applications and will show a blank white page at runtime.\n"
+                "\n"
+                "Install the NuGet package and pass the build/native path to CMake:\n"
+                "  nuget install Microsoft.Web.WebView2 -OutputDirectory <dir>\n"
+                "  cmake ... -DWEBVIEW2_PATH=<dir>\\Microsoft.Web.WebView2.<VERSION>\\build\\native\n"
+                "\n"
+                "Or use the helper script which installs it automatically:\n"
+                "  .\\scripts\\build-windows.ps1\n"
+                "\n"
+                "To allow a Release build without WebView2 (results in blank page at runtime):\n"
+                "  -DONAIRDECK_ALLOW_MISSING_WEBUI=ON\n"
+            )
+        else()
+            message(STATUS "WebView2 SDK: not found -> using legacy IE browser backend (resource provider unavailable)")
+        endif()
     endif()
 else()
     set(USE_WEBVIEW2 OFF)

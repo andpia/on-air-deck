@@ -85,7 +85,8 @@ Other modes:
 | --- | --- | --- |
 | `WEBUI_DEV_SERVER_URL` | `http://localhost:5173` | URL used by Debug builds for the embedded frontend. |
 | `WEBUI_DIST_PATH` | auto (`vendor/web-ui/dist` if present) | Path to the built frontend assets for Release packaging. |
-| `ONAIRDECK_ALLOW_MISSING_WEBUI` | `OFF` | When `ON`, allows Release builds to succeed even without a Web UI dist/. **Not recommended for production packages.** |
+| `WEBVIEW2_PATH` | (searched in NuGet cache) | Path to `build/native` of the Microsoft.Web.WebView2 NuGet package. Required for Windows Release so JUCE uses the modern Edge/Chromium backend. |
+| `ONAIRDECK_ALLOW_MISSING_WEBUI` | `OFF` | When `ON`, allows Release builds to succeed even without a Web UI dist/ or WebView2 SDK. **Not recommended for production packages.** |
 | `ONAIRDECK_USE_CURL` | `ON` | Enables CURL support when available. |
 | `ONAIRDECK_ENABLE_SANITIZERS` | `ON` | Enables AddressSanitizer in Debug on supported toolchains. |
 | `ONAIRDECK_UNITY_BUILD` | `OFF` | Enables CMake unity builds for faster compilation. |
@@ -100,9 +101,16 @@ On Windows, use the PowerShell helper script for a one-command release build:
 
 This script:
 1. Builds the frontend in `vendor/web-ui` (Node.js >= 20 required).
-2. Configures CMake with `-DWEBUI_DIST_PATH` pointing at the built dist/.
-3. Builds the Release target.
-4. Packages `OnAirDeck.exe` and `WebUI/` into `out/OnAirDeck-windows-release.zip`.
+2. **Installs the Microsoft.Web.WebView2 NuGet SDK automatically** (if not already present in the NuGet global cache).
+3. Configures CMake with `-DWEBUI_DIST_PATH` and `-DWEBVIEW2_PATH`.
+4. Builds the Release target.
+5. Packages `OnAirDeck.exe` and `WebUI/` into `out/OnAirDeck-windows-release.zip`.
+
+> **Why WebView2 is required on Windows**: Without the WebView2 SDK installed at compile time,
+> JUCE compiles with the legacy Internet Explorer backend (`JUCE_USE_WIN_WEBVIEW2=0`).
+> IE11 cannot render modern React/Vite applications and will show a blank white page.
+> The `build-windows.ps1` script and the `windows-release.yml` CI workflow both install the
+> WebView2 SDK automatically to prevent this.
 
 Optional parameters:
 
@@ -112,11 +120,14 @@ Optional parameters:
 
 # Skip the frontend build step (dist/ already present):
 .\scripts\build-windows.ps1 -SkipFrontendBuild
+
+# Provide a pre-installed WebView2 SDK path:
+.\scripts\build-windows.ps1 -WebView2Path C:\webview2-sdk\Microsoft.Web.WebView2.1.0.2651.64\build\native
 ```
 
 ### Windows CI workflow
 
 The `.github/workflows/windows-release.yml` workflow runs automatically on pushes to `main`
-and on pull requests.  It performs the same steps as `build-windows.ps1`, verifies that
-`WebUI/index.html` exists in the output, and uploads `OnAirDeck-windows-release.zip` as a
+and on pull requests.  It installs the WebView2 SDK, performs the same steps as `build-windows.ps1`,
+verifies that `WebUI/index.html` exists in the output, and uploads `OnAirDeck-windows-release.zip` as a
 build artifact.

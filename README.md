@@ -119,7 +119,8 @@ In **Debug** builds the app first loads bundled static assets (if available), an
 |---|---|---|
 | `WEBUI_DIST_PATH` | `vendor/web-ui/dist` when present | Path to the Vite `dist/` folder. If not set explicitly, CMake auto-detects the submodule build output when available. |
 | `WEBUI_DEV_SERVER_URL` | `http://localhost:5173` | URL loaded in **Debug** builds. |
-| `ONAIRDECK_ALLOW_MISSING_WEBUI` | `OFF` | When `ON`, allows Release builds to proceed without a Web UI dist/. **Not recommended for production packages.** |
+| `WEBVIEW2_PATH` | (searched in NuGet cache) | **(Windows only)** Path to `build/native` of the Microsoft.Web.WebView2 NuGet package. Required for Release so JUCE uses the modern Edge/Chromium backend instead of IE. |
+| `ONAIRDECK_ALLOW_MISSING_WEBUI` | `OFF` | When `ON`, allows Release builds to proceed without a Web UI dist/ or WebView2 SDK. **Not recommended for production packages.** |
 
 ## 📚 Documentation
 
@@ -258,19 +259,41 @@ This project is licensed under the **GNU GPLv3**. See the `LICENSE` file for mor
 | **macOS** | WebKit (WKWebView) | ✅ Available | Assets served via `juce://juce.backend/` |
 | **Linux** | WebKit2GTK | ✅ Available | Assets served via `juce://juce.backend/` |
 | **Windows + WebView2** | Edge/Chromium | ✅ Available | Assets served via `https://juce.backend/` |
-| **Windows (no WebView2)** | Internet Explorer | ❌ Not available | Assets loaded via `file://` URL from disk |
+| **Windows (no WebView2)** | Internet Explorer | ❌ Not available | Modern React/Vite apps **will not render** → blank white page |
 
-**Enabling WebView2 on Windows** (recommended for full JUCE 8 feature set):
-1. Install the [Microsoft WebView2 SDK NuGet package](https://www.nuget.org/packages/Microsoft.Web.WebView2/) into your local NuGet package directory.
-2. Run CMake – `FindWebView2.cmake` (from JUCE) will detect the package automatically and enable `JUCE_USE_WIN_WEBVIEW2=1`.
+**Enabling WebView2 on Windows** (required for Release builds):
 
-If the SDK is absent CMake prints `WebView2 SDK: not found -> using legacy IE browser backend` and the build continues without WebView2.
+WebView2 is now a hard requirement for Windows Release builds.  CMake will fail with a clear error if the SDK is not found.  The easiest way to satisfy this requirement is to use the provided helpers:
+
+```powershell
+# Installs WebView2 SDK automatically via NuGet and passes -DWEBVIEW2_PATH to CMake:
+.\scripts\build-windows.ps1
+```
+
+Or manually:
+1. Install the [Microsoft WebView2 SDK NuGet package](https://www.nuget.org/packages/Microsoft.Web.WebView2/):
+   ```
+   nuget install Microsoft.Web.WebView2 -OutputDirectory C:\webview2-sdk
+   ```
+2. Pass the `build/native` path to CMake:
+   ```
+   cmake ... -DWEBVIEW2_PATH=C:\webview2-sdk\Microsoft.Web.WebView2.<VERSION>\build\native
+   ```
+
+> **WebView2 Runtime** (required at runtime, not just compile time):  On Windows 10/11 with Microsoft Edge installed, WebView2 Runtime is pre-installed.  On older systems, download it from [Microsoft Edge WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/).
+
+### Blank White Page on Windows
+
+If the app shows a blank white page:
+
+1. **Check compile-time backend**: was the app built with `-DWEBVIEW2_PATH`?  Run CMake again with the correct `WEBVIEW2_PATH` and rebuild.  The CMake log should show `WebView2 SDK: found -> enabling JUCE_USE_WIN_WEBVIEW2`.
+2. **Check runtime**: is Microsoft Edge / WebView2 Runtime installed on the machine?  Install it if not.
 
 ### `withResourceProvider` compile error on Windows
 
 If you see `error C2039: 'withResourceProvider': is not a member of 'juce::WebBrowserComponent::Options'`, it means your JUCE copy is older than JUCE 8 or WebView2 is not enabled.  Make sure:
 - `vendor/JUCE` is at JUCE 8.0.12 or newer (`git submodule update --init --recursive`)
-- On Windows, install the WebView2 SDK as described above (or accept the IE fallback)
+- On Windows, install the WebView2 SDK as described above
 
 ---
 

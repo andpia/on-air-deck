@@ -45,14 +45,42 @@ jobs:
           }
           Write-Host "Frontend dist OK: $(Resolve-Path $distIndex)"
 
+      - name: Install WebView2 SDK (NuGet)
+        shell: pwsh
+        run: |
+          # The WebView2 NuGet SDK provides the headers and static loader stub needed
+          # to compile JUCE's modern Edge/Chromium browser backend (JUCE_USE_WIN_WEBVIEW2=1).
+          # Without it JUCE falls back to Internet Explorer which cannot render
+          # modern React/Vite applications and will produce a blank white page.
+          $sdkDir = Join-Path $env:RUNNER_TEMP "webview2-sdk"
+          Write-Host "Installing Microsoft.Web.WebView2 NuGet package to $sdkDir"
+          nuget install Microsoft.Web.WebView2 -OutputDirectory $sdkDir -NonInteractive
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "nuget install Microsoft.Web.WebView2 failed (exit $LASTEXITCODE)"
+            exit 1
+          }
+          # Locate the build/native directory (version-agnostic glob)
+          $nativePath = Get-ChildItem "$sdkDir\Microsoft.Web.WebView2.*\build\native" -Directory |
+                          Sort-Object Name -Descending |
+                          Select-Object -First 1 -ExpandProperty FullName
+          if (-not $nativePath -or -not (Test-Path "$nativePath\include\WebView2.h")) {
+            Write-Error "WebView2 SDK installation failed: WebView2.h not found under $sdkDir"
+            exit 1
+          }
+          Write-Host "WebView2 SDK native path: $nativePath"
+          "WEBVIEW2_SDK_PATH=$nativePath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: Configure CMake (Release)
         shell: pwsh
         run: |
           $distPath = "${{ github.workspace }}/vendor/web-ui/dist" -replace '\\','/'
+          $wv2Path  = "${{ env.WEBVIEW2_SDK_PATH }}" -replace '\\','/'
           Write-Host "WEBUI_DIST_PATH = $distPath"
+          Write-Host "WEBVIEW2_PATH   = $wv2Path"
           cmake -S . -B out/build/release `
             -DCMAKE_BUILD_TYPE=Release `
             -DWEBUI_DIST_PATH="$distPath" `
+            -DWEBVIEW2_PATH="$wv2Path" `
             --log-level=VERBOSE
 
       - name: Build (Release)
