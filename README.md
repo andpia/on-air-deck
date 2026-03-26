@@ -119,6 +119,7 @@ In **Debug** builds the app first loads bundled static assets (if available), an
 |---|---|---|
 | `WEBUI_DIST_PATH` | `vendor/web-ui/dist` when present | Path to the Vite `dist/` folder. If not set explicitly, CMake auto-detects the submodule build output when available. |
 | `WEBUI_DEV_SERVER_URL` | `http://localhost:5173` | URL loaded in **Debug** builds. |
+| `ONAIRDECK_ALLOW_MISSING_WEBUI` | `OFF` | When `ON`, allows Release builds to proceed without a Web UI dist/. **Not recommended for production packages.** |
 
 ## 📚 Documentation
 
@@ -150,6 +151,8 @@ The generated site will be written to the `out/docs/site/` directory.
 
 ## 🧰 One-Command Release Build
 
+### Unix / macOS / Linux
+
 To run frontend + CMake Release build in one command:
 
 ```bash
@@ -161,6 +164,30 @@ Optional environment variables:
 - `FRONTEND_DIR`: path to frontend repo (default: `vendor/web-ui`, fallback: `../on-air-deck-figma`)
 - `BUILD_DIR`: output build directory (default: `out/build/release`)
 - `DIST_DIR`: frontend dist path (default: `$FRONTEND_DIR/dist`)
+
+### Windows
+
+Use the PowerShell helper script for a one-command Windows release build:
+
+```powershell
+.\scripts\build-windows.ps1
+```
+
+This builds the frontend (`vendor/web-ui`), configures CMake with `-DWEBUI_DIST_PATH`, builds the Release target, and packages `OnAirDeck.exe` + `WebUI/` into `out/OnAirDeck-windows-release.zip`.
+
+Optional parameters:
+
+```powershell
+# Use a pre-built dist/ from outside the repo:
+.\scripts\build-windows.ps1 -WebUiDistPath C:\repos\on-air-deck-figma\dist
+
+# Skip the frontend build (dist/ already present):
+.\scripts\build-windows.ps1 -SkipFrontendBuild
+```
+
+### Windows CI
+
+The `.github/workflows/windows-release.yml` workflow builds the frontend and native app on Windows, verifies that `WebUI/index.html` is present in the output, and uploads a ZIP artifact (`OnAirDeck-windows-release.zip`) containing `OnAirDeck.exe` and the `WebUI/` folder. It runs automatically on pushes to `main` and pull requests.
 
 ## 🧹 Cleaning Generated Files
 

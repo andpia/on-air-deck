@@ -85,6 +85,38 @@ Other modes:
 | --- | --- | --- |
 | `WEBUI_DEV_SERVER_URL` | `http://localhost:5173` | URL used by Debug builds for the embedded frontend. |
 | `WEBUI_DIST_PATH` | auto (`vendor/web-ui/dist` if present) | Path to the built frontend assets for Release packaging. |
+| `ONAIRDECK_ALLOW_MISSING_WEBUI` | `OFF` | When `ON`, allows Release builds to succeed even without a Web UI dist/. **Not recommended for production packages.** |
 | `ONAIRDECK_USE_CURL` | `ON` | Enables CURL support when available. |
 | `ONAIRDECK_ENABLE_SANITIZERS` | `ON` | Enables AddressSanitizer in Debug on supported toolchains. |
 | `ONAIRDECK_UNITY_BUILD` | `OFF` | Enables CMake unity builds for faster compilation. |
+
+## Windows Build
+
+On Windows, use the PowerShell helper script for a one-command release build:
+
+```powershell
+.\scripts\build-windows.ps1
+```
+
+This script:
+1. Builds the frontend in `vendor/web-ui` (Node.js >= 20 required).
+2. Configures CMake with `-DWEBUI_DIST_PATH` pointing at the built dist/.
+3. Builds the Release target.
+4. Packages `OnAirDeck.exe` and `WebUI/` into `out/OnAirDeck-windows-release.zip`.
+
+Optional parameters:
+
+```powershell
+# Use a pre-built dist/ from outside the repo:
+.\scripts\build-windows.ps1 -WebUiDistPath C:\repos\on-air-deck-figma\dist
+
+# Skip the frontend build step (dist/ already present):
+.\scripts\build-windows.ps1 -SkipFrontendBuild
+```
+
+### Windows CI workflow
+
+The `.github/workflows/windows-release.yml` workflow runs automatically on pushes to `main`
+and on pull requests.  It performs the same steps as `build-windows.ps1`, verifies that
+`WebUI/index.html` exists in the output, and uploads `OnAirDeck-windows-release.zip` as a
+build artifact.

@@ -18,6 +18,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(ONAIRDECK_USE_CURL "Enable CURL support for HTTP functionality" ON)
 option(ONAIRDECK_ENABLE_SANITIZERS "Enable AddressSanitizer in Debug builds (non-MSVC only)" ON)
 option(ONAIRDECK_UNITY_BUILD "Enable Unity Build to speed up compilation" OFF)
+option(ONAIRDECK_ALLOW_MISSING_WEBUI
+    "Allow Release builds to proceed even when no Web UI dist/ folder is found. OFF by default so Release packages always include the Web UI."
+    OFF)
 
 # Web UI configuration
 # Path to the pre-built Vite dist/ folder.
@@ -228,7 +231,9 @@ endif()
 
 # Post-build: copy the pre-built Web UI into the output directory.
 # Set WEBUI_DIST_PATH to the dist/ folder produced by `npm run build`.
+message(STATUS "WebUI dist path (resolved): ${WEBUI_DIST_PATH}")
 if(WEBUI_DIST_PATH AND EXISTS "${WEBUI_DIST_PATH}")
+    message(STATUS "WebUI dist: ${WEBUI_DIST_PATH} -> will be copied post-build")
     if(APPLE)
         # macOS: copy into the .app bundle's Resources folder.
         add_custom_command(TARGET OnAirDeck POST_BUILD
@@ -245,22 +250,42 @@ if(WEBUI_DIST_PATH AND EXISTS "${WEBUI_DIST_PATH}")
                 "$<TARGET_FILE_DIR:OnAirDeck>/WebUI"
             COMMENT "Copying Web UI to WebUI/ next to executable"
         )
+        # Install rule so CPack/install packages include WebUI/ next to the executable.
+        install(DIRECTORY "${WEBUI_DIST_PATH}/"
+            DESTINATION "WebUI"
+            COMPONENT Runtime
+        )
     endif()
-    message(STATUS "WebUI dist: ${WEBUI_DIST_PATH} -> copied post-build")
 else()
     if(WEBUI_DIST_PATH)
-        message(WARNING
+        # Path was set explicitly but does not exist — always fatal.
+        message(FATAL_ERROR
             "WEBUI_DIST_PATH is set but the path does not exist: ${WEBUI_DIST_PATH}\n"
-            "Build the frontend first, for example:\n"
-            "  cd vendor/web-ui && npm install && npm run build"
+            "Build the frontend first:\n"
+            "  cd vendor/web-ui && npm install && npm run build\n"
+            "Or pass the correct path: -DWEBUI_DIST_PATH=<path-to-dist>"
         )
     else()
-        message(STATUS
-            "WebUI dist: not configured.\n"
-            "Release builds should provide a pre-built dist folder.\n"
-            "Default expected path: vendor/web-ui/dist\n"
-            "Override with: -DWEBUI_DIST_PATH=<path-to-dist>"
-        )
+        # Path was not set and auto-detection found nothing.
+        if(CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT ONAIRDECK_ALLOW_MISSING_WEBUI)
+            message(FATAL_ERROR
+                "Release build requires a pre-built Web UI dist/ folder, but none was found.\n"
+                "Expected location: vendor/web-ui/dist\n"
+                "Build the frontend first:\n"
+                "  cd vendor/web-ui && npm install && npm run build\n"
+                "Or point CMake at a pre-built dist/:\n"
+                "  -DWEBUI_DIST_PATH=<path-to-dist>\n"
+                "To allow a Release build without the Web UI (not recommended):\n"
+                "  -DONAIRDECK_ALLOW_MISSING_WEBUI=ON"
+            )
+        else()
+            message(STATUS
+                "WebUI dist: not configured (no dist/ found).\n"
+                "Debug builds will fall back to the Vite dev server.\n"
+                "Default expected path: vendor/web-ui/dist\n"
+                "Override with: -DWEBUI_DIST_PATH=<path-to-dist>"
+            )
+        endif()
     endif()
 endif()
 

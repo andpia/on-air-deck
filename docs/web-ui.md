@@ -38,6 +38,40 @@ Release builds do not depend on a running development server. The frontend is no
 
 The frontend project should keep a relative Vite base path (`base: './'`) so generated links remain portable across local origins (`file://` and `juce://`).
 
+## Release Build Requirement
+
+**Release builds require a pre-built Web UI dist/ folder.**  
+CMake will fail at configure time with a clear error message if no dist is found and
+`ONAIRDECK_ALLOW_MISSING_WEBUI` is not set:
+
+```
+Release build requires a pre-built Web UI dist/ folder, but none was found.
+```
+
+To allow a Release build without the Web UI (for CI smoke-tests or unusual setups):
+
+```bash
+cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release \
+  -DONAIRDECK_ALLOW_MISSING_WEBUI=ON
+```
+
+> This option is **off by default** and should not be used for production packages.
+
+## Windows CI
+
+The repository includes a dedicated GitHub Actions workflow (`.github/workflows/windows-release.yml`)
+that builds the frontend, configures CMake with `WEBUI_DIST_PATH`, builds the native app, verifies
+that `WebUI/index.html` is present next to the executable, and uploads a ZIP artifact containing
+both `OnAirDeck.exe` and the `WebUI/` folder.
+
+For local Windows builds, use the PowerShell helper:
+
+```powershell
+.\scripts\build-windows.ps1
+```
+
+See [Build and Run](build-and-run.md) for full details.
+
 ## Failure Modes
 
 If the app reports that it cannot connect to the server during Debug, the development server is not running or `WEBUI_DEV_SERVER_URL` points to the wrong address.

@@ -1,0 +1,131 @@
+name: Windows Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Windows Release with WebUI
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build frontend (vendor/web-ui)
+        working-directory: vendor/web-ui
+        run: |
+          npm ci
+          npm run build
+
+      - name: Verify frontend dist was produced
+        shell: pwsh
+        run: |
+          $distIndex = "vendor/web-ui/dist/index.html"
+          if (-not (Test-Path $distIndex)) {
+            Write-Error "Frontend build did not produce dist/index.html at $distIndex"
+            exit 1
+          }
+          Write-Host "Frontend dist OK: $(Resolve-Path $distIndex)"
+
+      - name: Configure CMake (Release)
+        shell: pwsh
+        run: |
+          $distPath = "${{ github.workspace }}/vendor/web-ui/dist" -replace '\\','/'
+          Write-Host "WEBUI_DIST_PATH = $distPath"
+          cmake -S . -B out/build/release `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DWEBUI_DIST_PATH="$distPath" `
+            --log-level=VERBOSE
+
+      - name: Build (Release)
+        run: cmake --build out/build/release --config Release --verbose
+
+      - name: Verify WebUI was copied next to executable
+        shell: pwsh
+        run: |
+          # JUCE places artefacts under OnAirDeck_artefacts/Release/ inside the build dir
+          $buildDir = "out/build/release"
+          $candidates = @(
+            "$buildDir/OnAirDeck_artefacts/Release/WebUI/index.html",
+            "$buildDir/WebUI/index.html"
+          )
+          $found = $false
+          foreach ($p in $candidates) {
+            if (Test-Path $p) {
+              Write-Host "WebUI/index.html found at: $(Resolve-Path $p)"
+              $found = $true
+              break
+            }
+          }
+          if (-not $found) {
+            Write-Error "WebUI/index.html was NOT found in the build output. Checked: $($candidates -join ', ')"
+            exit 1
+          }
+
+      - name: Collect release artifacts into zip
+        shell: pwsh
+        run: |
+          $buildDir = "out/build/release"
+          $stagingDir = "out/staging/windows-release"
+          New-Item -ItemType Directory -Force -Path $stagingDir | Out-Null
+
+          # Copy executable
+          $exeCandidates = @(
+            "$buildDir/OnAirDeck_artefacts/Release/OnAirDeck.exe",
+            "$buildDir/Release/OnAirDeck.exe"
+          )
+          $exeSrc = $null
+          foreach ($p in $exeCandidates) {
+            if (Test-Path $p) { $exeSrc = $p; break }
+          }
+          if (-not $exeSrc) {
+            Write-Error "OnAirDeck.exe not found. Searched: $($exeCandidates -join ', ')"
+            exit 1
+          }
+          Copy-Item $exeSrc -Destination $stagingDir
+
+          # Copy WebUI folder
+          $webuiCandidates = @(
+            "$buildDir/OnAirDeck_artefacts/Release/WebUI",
+            "$buildDir/WebUI"
+          )
+          $webuiSrc = $null
+          foreach ($p in $webuiCandidates) {
+            if (Test-Path $p) { $webuiSrc = $p; break }
+          }
+          if (-not $webuiSrc) {
+            Write-Error "WebUI/ folder not found. Searched: $($webuiCandidates -join ', ')"
+            exit 1
+          }
+          Copy-Item $webuiSrc -Destination $stagingDir -Recurse
+
+          # Create zip
+          $zipPath = "out/OnAirDeck-windows-release.zip"
+          Compress-Archive -Path "$stagingDir/*" -DestinationPath $zipPath -Force
+          Write-Host "Created artifact: $(Resolve-Path $zipPath)"
+          Get-ChildItem $stagingDir -Recurse | Select-Object FullName
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OnAirDeck-windows-release
+          path: out/OnAirDeck-windows-release.zip
+          if-no-files-found: error

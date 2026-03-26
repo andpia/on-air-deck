@@ -75,7 +75,7 @@ jobs:
             "$webkit_package"
 
       - name: Configure
-        run: cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release -DONAIRDECK_ALLOW_MISSING_WEBUI=ON
 
       - name: Build on non-Windows
         if: runner.os != 'Windows'
