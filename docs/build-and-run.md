@@ -28,8 +28,8 @@ For frontend setup details, see [Web UI](web-ui.md) and [Dependencies](dependenc
 ## Debug Build
 
 ```bash
-cmake -S . -B out/build/debug -DCMAKE_BUILD_TYPE=Debug
-cmake --build out/build/debug --config Debug
+cmake --preset debug
+cmake --build --preset debug
 ```
 
 In Debug, the app loads the Web UI from the Vite development server configured by `WEBUI_DEV_SERVER_URL`.
@@ -43,19 +43,32 @@ cd vendor/web-ui
 npm install
 npm run build
 cd ..
-cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release
-cmake --build out/build/release --config Release
+cmake --preset release
+cmake --build --preset release
 ```
 
 Release packaging copies the frontend files next to the app or inside the `.app` bundle; it does not embed them directly into the executable binary. At runtime, JUCE serves those files from the internal `juce://` resource origin.
 
+Release configure is fail-fast: if `WEBUI_DIST_PATH` is missing or invalid, CMake stops with a fatal error.
+
 If your frontend lives outside this repository, point CMake at the generated `dist/` directory explicitly:
 
 ```bash
-cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release \
-  -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist
-cmake --build out/build/release --config Release
+cmake --preset release -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist
+cmake --build --preset release
 ```
+
+## Standard Build Presets
+
+This repository uses `CMakePresets.json` as the default build convention:
+
+- `debug` writes to `out/build/debug`
+- `release` writes to `out/build/release`
+
+Equivalent Makefile helpers are available:
+
+- `make build-debug`
+- `make build-release`
 
 ## Windows Prerequisites
 

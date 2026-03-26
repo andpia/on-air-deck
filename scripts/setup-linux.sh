@@ -52,7 +52,7 @@ echo "  1. Clone with submodules (if not already done):"
 echo "     git submodule update --init --recursive"
 echo
 echo "  2. Configure and build:"
-echo "     cmake -S . -B out/build/debug -DCMAKE_BUILD_TYPE=Debug"
-echo "     cmake --build out/build/debug --config Debug"
+echo "     cmake --preset debug"
+echo "     cmake --build --preset debug"
 echo
 echo "For more information, see docs/build-and-run.md"

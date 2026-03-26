@@ -236,6 +236,11 @@ endif()
 
 # Post-build: copy the pre-built Web UI into the output directory.
 # Set WEBUI_DIST_PATH to the dist/ folder produced by `npm run build`.
+set(_ONAIRDECK_IS_RELEASE_CONFIG OFF)
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(_ONAIRDECK_IS_RELEASE_CONFIG ON)
+endif()
+
 if(WEBUI_DIST_PATH AND EXISTS "${WEBUI_DIST_PATH}")
     if(APPLE)
         # macOS: copy into the .app bundle's Resources folder.
@@ -257,18 +262,36 @@ if(WEBUI_DIST_PATH AND EXISTS "${WEBUI_DIST_PATH}")
     message(STATUS "WebUI dist: ${WEBUI_DIST_PATH} -> copied post-build")
 else()
     if(WEBUI_DIST_PATH)
-        message(WARNING
-            "WEBUI_DIST_PATH is set but the path does not exist: ${WEBUI_DIST_PATH}\n"
-            "Build the frontend first, for example:\n"
-            "  cd vendor/web-ui && npm install && npm run build"
-        )
+        if(_ONAIRDECK_IS_RELEASE_CONFIG)
+            message(FATAL_ERROR
+                "WEBUI_DIST_PATH is set but the path does not exist: ${WEBUI_DIST_PATH}\n"
+                "Release builds require a valid frontend dist folder.\n"
+                "Build the frontend first, for example:\n"
+                "  cd vendor/web-ui && npm install && npm run build"
+            )
+        else()
+            message(WARNING
+                "WEBUI_DIST_PATH is set but the path does not exist: ${WEBUI_DIST_PATH}\n"
+                "Build the frontend first, for example:\n"
+                "  cd vendor/web-ui && npm install && npm run build"
+            )
+        endif()
     else()
-        message(STATUS
-            "WebUI dist: not configured.\n"
-            "Release builds should provide a pre-built dist folder.\n"
-            "Default expected path: vendor/web-ui/dist\n"
-            "Override with: -DWEBUI_DIST_PATH=<path-to-dist>"
-        )
+        if(_ONAIRDECK_IS_RELEASE_CONFIG)
+            message(FATAL_ERROR
+                "WebUI dist: not configured.\n"
+                "Release builds require a pre-built dist folder.\n"
+                "Default expected path: vendor/web-ui/dist\n"
+                "Override with: -DWEBUI_DIST_PATH=<path-to-dist>"
+            )
+        else()
+            message(STATUS
+                "WebUI dist: not configured.\n"
+                "Release builds should provide a pre-built dist folder.\n"
+                "Default expected path: vendor/web-ui/dist\n"
+                "Override with: -DWEBUI_DIST_PATH=<path-to-dist>"
+            )
+        endif()
     endif()
 endif()
 

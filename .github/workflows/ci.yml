@@ -94,15 +94,15 @@ jobs:
             "$webkit_package"
 
       - name: Configure
-        run: cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release
+        run: cmake --preset release
 
       - name: Build on non-Windows
         if: runner.os != 'Windows'
-        run: cmake --build out/build/release --config Release -- -j 2
+        run: cmake --build --preset release -- -j 2
 
       - name: Build on Windows
         if: runner.os == 'Windows'
-        run: cmake --build out/build/release --config Release
+        run: cmake --build --preset release
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

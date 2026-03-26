@@ -31,15 +31,15 @@ OnAirDeck uses **CMake** for modern, cross-platform dependency management.
     ```
 2. **Generate and Build (Quick Start - Debug)**:
    ```bash
-   cmake -S . -B out/build/debug -DCMAKE_BUILD_TYPE=Debug
-   cmake --build out/build/debug --config Debug
+   cmake --preset debug
+   cmake --build --preset debug
    ```
 
 3. **Release build**:
    Build `vendor/web-ui/dist` first (or pass `WEBUI_DIST_PATH` to an external dist), then:
    ```bash
-   cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release
-   cmake --build out/build/release --config Release
+   cmake --preset release
+   cmake --build --preset release
    ```
 
 ### Linux Dependencies
@@ -75,8 +75,8 @@ In **Debug** builds the app first loads bundled static assets (if available), an
    ```
 2. Build OnAirDeck in **Debug** mode and run it:
    ```bash
-   cmake -S . -B out/build/debug -DCMAKE_BUILD_TYPE=Debug
-   cmake --build out/build/debug --config Debug
+   cmake --preset debug
+   cmake --build --preset debug
    ./out/build/debug/OnAirDeck_artefacts/Debug/OnAirDeck   # path varies by OS
    ```
    The embedded browser will load `http://localhost:5173` and reflect live edits.
@@ -97,19 +97,20 @@ In **Debug** builds the app first loads bundled static assets (if available), an
 
 2. Build OnAirDeck in **Release**:
    ```bash
-   cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release
-   cmake --build out/build/release --config Release
+   cmake --preset release
+   cmake --build --preset release
    ```
 
    If your frontend dist is outside `vendor/web-ui/dist`, point CMake at that folder explicitly:
    ```bash
-   cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release \
-         -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist
-   cmake --build out/build/release --config Release
+   cmake --preset release -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist
+   cmake --build --preset release
    ```
    CMake will copy the Web UI to the correct location automatically:
    - **macOS**: `OnAirDeck.app/Contents/Resources/WebUI/`
    - **Windows / Linux**: `WebUI/` next to the executable
+
+   Release configure is fail-fast: if `WEBUI_DIST_PATH` is missing or invalid, CMake stops with a fatal error.
 
    The Web UI is therefore bundled with the Release app package, but not embedded directly into the executable binary. At runtime, the app serves these assets via JUCE's internal `juce://` resource origin.
 
@@ -159,8 +160,30 @@ bash scripts/release.sh
 Optional environment variables:
 
 - `FRONTEND_DIR`: path to frontend repo (default: `vendor/web-ui`, fallback: `../on-air-deck-figma`)
-- `BUILD_DIR`: output build directory (default: `out/build/release`)
+- `BUILD_DIR`: optional custom build directory (if omitted, `RELEASE_PRESET` is used)
+- `RELEASE_PRESET`: CMake preset for release builds (default: `release`)
 - `DIST_DIR`: frontend dist path (default: `$FRONTEND_DIR/dist`)
+
+## 🧩 CMake Presets and Makefile Helpers
+
+This repository provides `CMakePresets.json` to standardize output folders:
+
+- `debug` -> `out/build/debug`
+- `release` -> `out/build/release`
+
+You can use CMake directly:
+
+```bash
+cmake --preset debug
+cmake --build --preset debug
+```
+
+Or use Makefile helpers:
+
+```bash
+make build-debug
+make build-release
+```
 
 ## 🧹 Cleaning Generated Files
 

@@ -25,8 +25,7 @@ If you keep the frontend repository outside this project, use that external path
 If Vite runs on a different port, reconfigure CMake:
 
 ```bash
-cmake -S . -B out/build/debug -DCMAKE_BUILD_TYPE=Debug \
-  -DWEBUI_DEV_SERVER_URL=http://localhost:3000
+cmake --preset debug -DWEBUI_DEV_SERVER_URL=http://localhost:3000
 ```
 
 ## Release Mode

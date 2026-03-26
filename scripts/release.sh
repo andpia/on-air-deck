@@ -10,7 +10,9 @@ elif [[ -d "$ROOT_DIR/vendor/web-ui" ]]; then
 else
 	FRONTEND_DIR="$ROOT_DIR/../on-air-deck-figma"
 fi
-BUILD_DIR="${BUILD_DIR:-$ROOT_DIR/out/build/release}"
+DEFAULT_BUILD_DIR="$ROOT_DIR/out/build/release"
+BUILD_DIR="${BUILD_DIR:-$DEFAULT_BUILD_DIR}"
+RELEASE_PRESET="${RELEASE_PRESET:-release}"
 DIST_DIR="${DIST_DIR:-$FRONTEND_DIR/dist}"
 
 if ! command -v node >/dev/null 2>&1; then
@@ -55,12 +57,22 @@ fi
 echo "[2/4] Building frontend"
 npm run build
 
-echo "[3/4] Configuring CMake Release in $BUILD_DIR"
+echo "[3/4] Configuring CMake Release"
 cd "$ROOT_DIR"
-cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -DWEBUI_DIST_PATH="$DIST_DIR"
+if [[ "$BUILD_DIR" == "$DEFAULT_BUILD_DIR" ]]; then
+	echo "Using CMake preset: $RELEASE_PRESET"
+	cmake --preset "$RELEASE_PRESET" -DWEBUI_DIST_PATH="$DIST_DIR"
+else
+	echo "Using custom BUILD_DIR: $BUILD_DIR"
+	cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release -DWEBUI_DIST_PATH="$DIST_DIR"
+fi
 
 echo "[4/4] Building app"
-cmake --build "$BUILD_DIR" --config Release
+if [[ "$BUILD_DIR" == "$DEFAULT_BUILD_DIR" ]]; then
+	cmake --build --preset "$RELEASE_PRESET"
+else
+	cmake --build "$BUILD_DIR" --config Release
+fi
 
 APP_PATH="$BUILD_DIR/OnAirDeck_artefacts/Release/OnAirDeck.app"
 
