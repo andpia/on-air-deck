@@ -16,6 +16,17 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build Web UI
+        working-directory: vendor/web-ui
+        run: |
+          npm ci
+          npm run build
+
       - name: Debug environment
         shell: bash
         run: |
