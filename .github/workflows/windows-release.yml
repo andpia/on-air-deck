@@ -1,0 +1,174 @@
+name: Windows Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Windows Release with WebUI
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository (with submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build frontend (vendor/web-ui)
+        working-directory: vendor/web-ui
+        run: |
+          npm ci
+          npm run build
+
+      - name: Verify frontend dist was produced
+        shell: pwsh
+        run: |
+          $distIndex = "vendor/web-ui/dist/index.html"
+          if (-not (Test-Path $distIndex)) {
+            Write-Error "Frontend build did not produce dist/index.html at $distIndex"
+            exit 1
+          }
+          Write-Host "Frontend dist OK: $(Resolve-Path $distIndex)"
+
+      - name: Install WebView2 SDK (NuGet)
+        shell: pwsh
+        run: |
+          # Ensure TLS 1.2 for Invoke-WebRequest
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+          $sdkDir = Join-Path $env:RUNNER_TEMP "webview2-sdk"
+          New-Item -ItemType Directory -Force -Path $sdkDir | Out-Null
+
+          $nugetExe = Join-Path $env:RUNNER_TEMP 'nuget.exe'
+          if (-not (Test-Path $nugetExe)) {
+            Write-Host "Downloading nuget.exe to $nugetExe"
+            Invoke-WebRequest -Uri 'https://dist.nuget.org/win-x86-commandline/latest/nuget.exe' -OutFile $nugetExe
+          }
+
+          # Try install with retries for transient network issues
+          $maxAttempts = 3
+          $success = $false
+          for ($i = 1; $i -le $maxAttempts; $i++) {
+            & $nugetExe install Microsoft.Web.WebView2 -OutputDirectory $sdkDir -NonInteractive
+            if ($LASTEXITCODE -eq 0) { $success = $true; break }
+            Write-Host "nuget install attempt $i failed (exit $LASTEXITCODE). Retrying..."
+            Start-Sleep -Seconds (5 * $i)
+          }
+          if (-not $success) {
+            Write-Error "nuget install Microsoft.Web.WebView2 failed after $maxAttempts attempts (exit $LASTEXITCODE)"
+            exit 1
+          }
+
+          # Locate the build/native include dir and verify WebView2.h exists
+          $nativePath = Get-ChildItem "$sdkDir\Microsoft.Web.WebView2.*\build\native" -Directory |
+                          Sort-Object Name -Descending |
+                          Select-Object -First 1 -ExpandProperty FullName
+          if (-not $nativePath -or -not (Test-Path "$nativePath\include\WebView2.h")) {
+            Write-Error "WebView2 SDK installation failed: WebView2.h not found under $sdkDir"
+            exit 1
+          }
+          Write-Host "WebView2 SDK native path: $nativePath"
+          "WEBVIEW2_SDK_PATH=$nativePath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Configure CMake (Release)
+        shell: pwsh
+        run: |
+          $distPath = "${{ github.workspace }}/vendor/web-ui/dist" -replace '\\','/'
+          $wv2Path  = "${{ env.WEBVIEW2_SDK_PATH }}" -replace '\\','/'
+          Write-Host "WEBUI_DIST_PATH = $distPath"
+          Write-Host "WEBVIEW2_PATH   = $wv2Path"
+          cmake -S . -B out/build/release `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DWEBUI_DIST_PATH="$distPath" `
+            -DWEBVIEW2_PATH="$wv2Path" `
+            --log-level=VERBOSE
+
+      - name: Build (Release)
+        run: cmake --build out/build/release --config Release --verbose
+
+      - name: Verify WebUI was copied next to executable
+        shell: pwsh
+        run: |
+          # JUCE places artefacts under OnAirDeck_artefacts/Release/ inside the build dir
+          $buildDir = "out/build/release"
+          $candidates = @(
+            "$buildDir/OnAirDeck_artefacts/Release/WebUI/index.html",
+            "$buildDir/WebUI/index.html"
+          )
+          $found = $false
+          foreach ($p in $candidates) {
+            if (Test-Path $p) {
+              Write-Host "WebUI/index.html found at: $(Resolve-Path $p)"
+              $found = $true
+              break
+            }
+          }
+          if (-not $found) {
+            Write-Error "WebUI/index.html was NOT found in the build output. Checked: $($candidates -join ', ')"
+            exit 1
+          }
+
+      - name: Collect release artifacts into zip
+        shell: pwsh
+        run: |
+          $buildDir = "out/build/release"
+          $stagingDir = "out/staging/windows-release"
+          New-Item -ItemType Directory -Force -Path $stagingDir | Out-Null
+
+          # Copy executable
+          $exeCandidates = @(
+            "$buildDir/OnAirDeck_artefacts/Release/OnAirDeck.exe",
+            "$buildDir/Release/OnAirDeck.exe"
+          )
+          $exeSrc = $null
+          foreach ($p in $exeCandidates) {
+            if (Test-Path $p) { $exeSrc = $p; break }
+          }
+          if (-not $exeSrc) {
+            Write-Error "OnAirDeck.exe not found. Searched: $($exeCandidates -join ', ')"
+            exit 1
+          }
+          Copy-Item $exeSrc -Destination $stagingDir
+
+          # Copy WebUI folder
+          $webuiCandidates = @(
+            "$buildDir/OnAirDeck_artefacts/Release/WebUI",
+            "$buildDir/WebUI"
+          )
+          $webuiSrc = $null
+          foreach ($p in $webuiCandidates) {
+            if (Test-Path $p) { $webuiSrc = $p; break }
+          }
+          if (-not $webuiSrc) {
+            Write-Error "WebUI/ folder not found. Searched: $($webuiCandidates -join ', ')"
+            exit 1
+          }
+          Copy-Item $webuiSrc -Destination $stagingDir -Recurse
+
+          # Create zip
+          $zipPath = "out/OnAirDeck-windows-release.zip"
+          Compress-Archive -Path "$stagingDir/*" -DestinationPath $zipPath -Force
+          Write-Host "Created artifact: $(Resolve-Path $zipPath)"
+          Get-ChildItem $stagingDir -Recurse | Select-Object FullName
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OnAirDeck-windows-release
+          path: out/OnAirDeck-windows-release.zip
+          if-no-files-found: error
