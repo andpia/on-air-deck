@@ -8,7 +8,7 @@
 - Access to the companion frontend repository `andpia/on-air-deck-figma` (included as `vendor/web-ui/` submodule by default)
   - Debug workflow: run the Vite development server
   - Release workflow: build `dist/` and pass it through `WEBUI_DIST_PATH`
-- **Windows only (optional)**: [Microsoft WebView2 SDK](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) NuGet package to enable the Chromium-based backend and the bundled resource provider.  Without it the IE backend is used and assets are loaded via `file://`.
+- **Windows (required)**: [Microsoft WebView2 SDK](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) NuGet package.  This enables the Chromium-based backend and the bundled resource provider.  Without it CMake falls back to the legacy IE backend, which does **not** support modern JavaScript (ES modules) — the app will display a blank white screen at runtime.
 
 Clone the repository with submodules:
 
@@ -56,6 +56,18 @@ cmake -S . -B out/build/release -DCMAKE_BUILD_TYPE=Release \
   -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist
 cmake --build out/build/release --config Release
 ```
+
+## Windows Prerequisites
+
+Before configuring CMake on Windows, install the WebView2 SDK NuGet package so that JUCE uses the modern Chromium-based backend.  Open PowerShell and run:
+
+```powershell
+Register-PackageSource -Name nuget -ProviderName NuGet `
+  -Location https://www.nuget.org/api/v2 -Trusted -Force
+Install-Package Microsoft.Web.WebView2 -Scope CurrentUser -Force
+```
+
+CMake's `FindWebView2.cmake` (bundled with JUCE) searches `$USERPROFILE\AppData\Local\PackageManagement\NuGet\Packages` automatically.  Once installed, re-run CMake configure and `JUCE_USE_WIN_WEBVIEW2=1` will be printed to confirm detection.
 
 ## Linux Packages
 
