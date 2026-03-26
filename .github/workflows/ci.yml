@@ -57,6 +57,14 @@ jobs:
             g++ --version || true
           fi
 
+      - name: Install WebView2 SDK (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          nuget install Microsoft.Web.WebView2 `
+            -OutputDirectory "$env:USERPROFILE\AppData\Local\PackageManagement\NuGet\Packages" `
+            -NonInteractive
+
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
         run: |

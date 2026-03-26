@@ -22,7 +22,7 @@
 ## 🚀 Building the Project
 
 OnAirDeck uses **CMake** for modern, cross-platform dependency management.
-> **JUCE 8 required** — OnAirDeck uses the `WebBrowserComponent::Options::withResourceProvider` API introduced in JUCE 8.  The `vendor/JUCE` submodule is pinned to JUCE 8.0.12 or later.  On Windows, the bundled resource provider is available when the [Microsoft WebView2 SDK](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) is installed; otherwise the app falls back to the legacy IE backend and loads web assets from the file system directly.
+> **JUCE 8 required** — OnAirDeck uses the `WebBrowserComponent::Options::withResourceProvider` API introduced in JUCE 8.  The `vendor/JUCE` submodule is pinned to JUCE 8.0.12 or later.  On Windows, the [Microsoft WebView2 SDK](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) NuGet package is **required** — without it JUCE falls back to the legacy IE backend which does not support modern JavaScript (ES modules) and the UI will show a blank white screen at runtime.
 
 1. **Clone the repository**:
     ```bash
@@ -231,19 +231,24 @@ This project is licensed under the **GNU GPLv3**. See the `LICENSE` file for mor
 | **macOS** | WebKit (WKWebView) | ✅ Available | Assets served via `juce://juce.backend/` |
 | **Linux** | WebKit2GTK | ✅ Available | Assets served via `juce://juce.backend/` |
 | **Windows + WebView2** | Edge/Chromium | ✅ Available | Assets served via `https://juce.backend/` |
-| **Windows (no WebView2)** | Internet Explorer | ❌ Not available | Assets loaded via `file://` URL from disk |
+| **Windows (no WebView2)** | Internet Explorer | ❌ Not available | ⚠️ IE does not support ES modules — UI shows a blank white screen |
 
-**Enabling WebView2 on Windows** (recommended for full JUCE 8 feature set):
-1. Install the [Microsoft WebView2 SDK NuGet package](https://www.nuget.org/packages/Microsoft.Web.WebView2/) into your local NuGet package directory.
+**Installing WebView2 on Windows** (required):
+1. Install the [Microsoft WebView2 SDK NuGet package](https://www.nuget.org/packages/Microsoft.Web.WebView2/) into your local NuGet package directory:
+   ```powershell
+   Register-PackageSource -Name nuget -ProviderName NuGet `
+     -Location https://www.nuget.org/api/v2 -Trusted -Force
+   Install-Package Microsoft.Web.WebView2 -Scope CurrentUser -Force
+   ```
 2. Run CMake – `FindWebView2.cmake` (from JUCE) will detect the package automatically and enable `JUCE_USE_WIN_WEBVIEW2=1`.
 
-If the SDK is absent CMake prints `WebView2 SDK: not found -> using legacy IE browser backend` and the build continues without WebView2.
+If the SDK is absent CMake now prints a **warning** and the build continues, but the resulting app will not display the UI.
 
 ### `withResourceProvider` compile error on Windows
 
 If you see `error C2039: 'withResourceProvider': is not a member of 'juce::WebBrowserComponent::Options'`, it means your JUCE copy is older than JUCE 8 or WebView2 is not enabled.  Make sure:
 - `vendor/JUCE` is at JUCE 8.0.12 or newer (`git submodule update --init --recursive`)
-- On Windows, install the WebView2 SDK as described above (or accept the IE fallback)
+- On Windows, install the WebView2 SDK as described above
 
 ---
 

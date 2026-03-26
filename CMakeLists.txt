@@ -177,7 +177,15 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         target_link_libraries(OnAirDeck PRIVATE "${WebView2_library}")
     else()
         set(USE_WEBVIEW2 OFF)
-        message(STATUS "WebView2 SDK: not found -> using legacy IE browser backend (resource provider unavailable)")
+        message(WARNING
+            "WebView2 SDK not found. The app will use the legacy IE backend, which does not support "
+            "modern JavaScript (ES modules) and will show a blank white page at runtime.\n"
+            "Install the Microsoft.Web.WebView2 NuGet package so CMake can detect it:\n"
+            "  Register-PackageSource -Name nuget -ProviderName NuGet "
+            "-Location https://www.nuget.org/api/v2 -Trusted -Force\n"
+            "  Install-Package Microsoft.Web.WebView2 -Scope CurrentUser -Force\n"
+            "See docs/build-and-run.md for details."
+        )
     endif()
 else()
     set(USE_WEBVIEW2 OFF)
