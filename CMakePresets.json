@@ -29,12 +29,14 @@
     {
       "name": "debug",
       "displayName": "Build Debug",
-      "configurePreset": "debug"
+      "configurePreset": "debug",
+      "configuration": "Debug"
     },
     {
       "name": "release",
       "displayName": "Build Release",
-      "configurePreset": "release"
+      "configurePreset": "release",
+      "configuration": "Release"
     }
   ]
 }

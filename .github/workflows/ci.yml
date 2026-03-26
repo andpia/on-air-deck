@@ -104,6 +104,33 @@ jobs:
         if: runner.os == 'Windows'
         run: cmake --build --preset release
 
+      - name: Verify packaged WebUI (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $webuiIndex = Get-ChildItem -Path out/build/release -Recurse -File -Filter index.html |
+            Where-Object { $_.FullName -match '[\\/]WebUI[\\/]index\.html$' } |
+            Select-Object -First 1
+
+          if (-not $webuiIndex) {
+            Write-Error "WebUI/index.html not found under out/build/release"
+            exit 1
+          }
+
+          Write-Host "Found packaged WebUI at: $($webuiIndex.FullName)"
+
+      - name: Verify packaged WebUI (non-Windows)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          webui_index="$(find out/build/release -type f -path '*/WebUI/index.html' | head -n 1)"
+          if [[ -z "$webui_index" ]]; then
+            echo "WebUI/index.html not found under out/build/release" >&2
+            exit 1
+          fi
+
+          echo "Found packaged WebUI at: $webui_index"
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
