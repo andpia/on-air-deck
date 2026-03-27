@@ -123,9 +123,18 @@ WebUIComponent::WebUIComponent()
    // reachable when the WebView2 Runtime (Edge) is installed.  Without it
    // JUCE silently falls back to the legacy MSHTML/IE engine, which cannot
    // resolve that origin and shows an opaque "Navigation cancelled" page.
-   // Detect this situation and show a clear, actionable message instead.
-   #if JUCE_WINDOWS && JUCE_WEB_BROWSER_RESOURCE_PROVIDER_AVAILABLE
-    if (! isWebView2RuntimeAvailable())
+   // Also, when the WebView2 SDK was not compiled in at all, JUCE always uses
+   // the IE backend, which cannot run modern ES-module JavaScript regardless
+   // of the URL used.  In either case, detect the situation early and show a
+   // clear, actionable message instead of a broken blank page.
+   #if JUCE_WINDOWS
+    #if JUCE_WEB_BROWSER_RESOURCE_PROVIDER_AVAILABLE
+    const bool needsWebView2Alert = ! isWebView2RuntimeAvailable();
+    #else
+    // WebView2 SDK was not compiled in → IE backend is always used.
+    const bool needsWebView2Alert = true;
+    #endif
+    if (needsWebView2Alert)
     {
         juce::MessageManager::callAsync ([]
         {
