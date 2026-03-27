@@ -23,6 +23,16 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "release-windows",
+      "displayName": "Release (Windows/Ninja)",
+      "description": "Release build using Ninja single-config generator for Windows CI",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
     }
   ],
   "buildPresets": [
@@ -36,6 +46,12 @@
       "name": "release",
       "displayName": "Build Release",
       "configurePreset": "release",
+      "configuration": "Release"
+    },
+    {
+      "name": "release-windows",
+      "displayName": "Build Release (Windows/Ninja)",
+      "configurePreset": "release-windows",
       "configuration": "Release"
     }
   ]
