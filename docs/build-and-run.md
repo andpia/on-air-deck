@@ -82,6 +82,16 @@ Install-Package Microsoft.Web.WebView2 -Scope CurrentUser -Force
 
 CMake's `FindWebView2.cmake` (bundled with JUCE) searches `$USERPROFILE\AppData\Local\PackageManagement\NuGet\Packages` automatically.  Once installed, re-run CMake configure and `JUCE_USE_WIN_WEBVIEW2=1` will be printed to confirm detection.
 
+### WebView2 Runtime (end-user requirement)
+
+The built application also requires the **Microsoft Edge WebView2 Runtime** to be installed on the end-user's machine.  On Windows 10 (21H1 and later) and Windows 11 the Runtime ships as a system component and should be present by default.  On older Windows versions or Windows Server it may need to be installed separately.
+
+If the Runtime is missing, the application will display a dialog with a download link:
+
+```
+https://go.microsoft.com/fwlink/p/?LinkId=2124703
+```
+
 ## Linux Packages
 
 On Linux, install the required system dependencies before configuring:

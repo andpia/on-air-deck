@@ -2,6 +2,24 @@
 
 #include <unordered_map>
 
+// WebView2 runtime detection – only available on Windows when the SDK is present.
+// The static loader (WebView2LoaderStatic.lib) exposes
+// GetAvailableCoreWebView2BrowserVersionString which returns S_OK when the
+// WebView2 Runtime (Edge) is installed on the machine.
+#if JUCE_WINDOWS && JUCE_WEB_BROWSER_RESOURCE_PROVIDER_AVAILABLE
+ #include <WebView2.h>
+
+static bool isWebView2RuntimeAvailable()
+{
+    LPWSTR versionInfo = nullptr;
+    const HRESULT hr   = GetAvailableCoreWebView2BrowserVersionString (nullptr, &versionInfo);
+    const bool available = SUCCEEDED (hr) && versionInfo != nullptr;
+    if (versionInfo != nullptr)
+        CoTaskMemFree (versionInfo);
+    return available;
+}
+#endif
+
 juce::File WebUIComponent::getBundledWebUIDirectory()
 {
    #if JUCE_MAC
@@ -101,6 +119,30 @@ juce::WebBrowserComponent::Options WebUIComponent::createBrowserOptions()
 WebUIComponent::WebUIComponent()
     : juce::WebBrowserComponent (createBrowserOptions())
 {
+   // On Windows the resource-provider URL (https://juce.backend/) is only
+   // reachable when the WebView2 Runtime (Edge) is installed.  Without it
+   // JUCE silently falls back to the legacy MSHTML/IE engine, which cannot
+   // resolve that origin and shows an opaque "Navigation cancelled" page.
+   // Detect this situation and show a clear, actionable message instead.
+   #if JUCE_WINDOWS && JUCE_WEB_BROWSER_RESOURCE_PROVIDER_AVAILABLE
+    if (! isWebView2RuntimeAvailable())
+    {
+        juce::MessageManager::callAsync ([]
+        {
+            juce::AlertWindow::showMessageBoxAsync (
+                juce::MessageBoxIconType::WarningIcon,
+                "Microsoft Edge WebView2 Runtime Required",
+                "On Air Deck requires the Microsoft Edge WebView2 Runtime "
+                "to display its user interface.\n\n"
+                "Please download and install it from:\n"
+                "  https://go.microsoft.com/fwlink/p/?LinkId=2124703\n\n"
+                "Restart the application after installation.",
+                "OK");
+        });
+        return; // Do not navigate; leave the browser pane blank.
+    }
+   #endif
+
     goToURL (getStartupURL());
 }
 
@@ -140,14 +182,47 @@ void WebUIComponent::pageFinishedLoading (const juce::String& url)
 
 bool WebUIComponent::pageLoadHadNetworkError (const juce::String& errorInfo)
 {
-    const auto escapedError = juce::URL::addEscapeChars (errorInfo, false);
+    // Build a self-contained error page.  We intentionally avoid a data: URI
+    // because the legacy IE/MSHTML backend may block navigation to data: URLs
+    // depending on the active security zone.  Writing a physical temp file and
+    // using a file:// URL lets even the IE fallback render the error.
+    //
+    // Use a unique filename to prevent symlink-based race conditions.
+    const juce::File errFile = juce::File::createTempFile ("_onairdeck_load_error.html");
 
-    goToURL ("data:text/html;charset=UTF-8,"
-             "<html><body style='font-family:sans-serif;padding:24px'>"
-             "<h2>Web UI load failed</h2>"
-             "<p>The embedded browser could not load one or more resources.</p>"
-             "<pre style='white-space:pre-wrap'>" + escapedError + "</pre>"
-             "</body></html>");
+    // Escape all HTML-significant characters before embedding in the page.
+    const juce::String safeError = errorInfo
+        .replace ("&",  "&amp;")
+        .replace ("<",  "&lt;")
+        .replace (">",  "&gt;")
+        .replace ("\"", "&quot;")
+        .replace ("'",  "&#x27;");
+
+    const juce::String html =
+        "<!DOCTYPE html><html><body style='font-family:sans-serif;padding:24px'>"
+        "<h2>Web UI load failed</h2>"
+        "<p>The embedded browser could not load one or more resources.</p>"
+        "<pre style='white-space:pre-wrap'>"
+        + safeError
+        + "</pre></body></html>";
+
+    if (errFile.replaceWithText (html))
+    {
+        goToURL (juce::URL (errFile).toString (false));
+    }
+    else
+    {
+        // Last-resort: try the data: URI anyway (works with WebView2 / WebKit).
+        DBG ("WebUIComponent: could not write temp error file at "
+             + errFile.getFullPathName() + "; falling back to data: URI");
+        const auto escapedError = juce::URL::addEscapeChars (errorInfo, false);
+        goToURL ("data:text/html;charset=UTF-8,"
+                 "<html><body style='font-family:sans-serif;padding:24px'>"
+                 "<h2>Web UI load failed</h2>"
+                 "<p>The embedded browser could not load one or more resources.</p>"
+                 "<pre style='white-space:pre-wrap'>" + escapedError + "</pre>"
+                 "</body></html>");
+    }
 
     return false;
 }
