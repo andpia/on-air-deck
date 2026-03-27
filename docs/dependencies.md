@@ -12,7 +12,7 @@ This page lists external repositories required to build and run OnAirDeck workfl
 - Integration: included as a git submodule inside `vendor/JUCE/`.
 - Impact:
   - Required for all Debug and Release native builds.
-  - On Windows, the full resource-provider feature requires the [Microsoft WebView2 SDK](https://developer.microsoft.com/en-us/microsoft-edge/webview2/); without it the app falls back to the IE backend and loads assets via `file://`.
+  - On Windows, the full resource-provider feature requires the [Microsoft WebView2 SDK](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) at **build time** and the **Microsoft Edge WebView2 Runtime** at **run time**. Without the Runtime the app shows a dialog asking the user to install it (see [Build and Run](build-and-run.md#windows-prerequisites)).
 
 ### OnAirDeck Frontend UI
 
