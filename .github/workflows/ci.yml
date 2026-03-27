@@ -61,9 +61,13 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          $nugetDir = "$env:USERPROFILE\AppData\Local\PackageManagement\NuGet\Packages"
           nuget install Microsoft.Web.WebView2 `
-            -OutputDirectory "$env:USERPROFILE\AppData\Local\PackageManagement\NuGet\Packages" `
+            -OutputDirectory $nugetDir `
             -NonInteractive
+          # Export the directory so CMake can find the WebView2 package without
+          # relying on JUCE's built-in default path detection.
+          echo "JUCE_WEBVIEW2_PACKAGE_LOCATION=$nugetDir" >> $env:GITHUB_ENV
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
