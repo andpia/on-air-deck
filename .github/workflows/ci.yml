@@ -117,8 +117,27 @@ jobs:
             libcurl4-openssl-dev \
             "$webkit_package"
 
-      - name: Configure
-        run: cmake --preset release
+      - name: Setup MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $logPath = Join-Path $env:RUNNER_TEMP "cmake-configure-windows.log"
+
+          cmake --preset release-windows -DWEBUI_DIST_PATH="${{ github.workspace }}/vendor/web-ui/dist" 2>&1 |
+            Tee-Object -FilePath $logPath
+
+          if (-not (Select-String -Path $logPath -Pattern "WebView2 SDK: found" -Quiet)) {
+            Write-Error "WebView2 SDK was not enabled during CMake configure. The Windows build would fall back to IE backend and show a blank Web UI."
+            exit 1
+          }
+
+      - name: Configure (non-Windows)
+        if: runner.os != 'Windows'
+        run: cmake --preset release -DWEBUI_DIST_PATH="${{ github.workspace }}/vendor/web-ui/dist"
 
       - name: Build on non-Windows
         if: runner.os != 'Windows'
@@ -126,22 +145,32 @@ jobs:
 
       - name: Build on Windows
         if: runner.os == 'Windows'
-        run: cmake --build --preset release
+        run: cmake --build --preset release-windows
 
       - name: Verify packaged WebUI (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $webuiIndex = Get-ChildItem -Path out/build/release -Recurse -File -Filter index.html |
-            Where-Object { $_.FullName -match '[\\/]WebUI[\\/]index\.html$' } |
+          $exe = Get-ChildItem -Path out/build/release -Recurse -File -Filter "OnAirDeck*.exe" |
+            Where-Object { $_.FullName -match '[\\/]OnAirDeck_artefacts[\\/]' } |
+            Sort-Object FullName |
             Select-Object -First 1
 
-          if (-not $webuiIndex) {
-            Write-Error "WebUI/index.html not found under out/build/release"
+          if (-not $exe) {
+            Write-Error "OnAirDeck executable not found under out/build/release"
             exit 1
           }
 
-          Write-Host "Found packaged WebUI at: $($webuiIndex.FullName)"
+          Write-Host "Found executable: $($exe.FullName)"
+
+          $webuiIndex = Join-Path $exe.DirectoryName "WebUI\index.html"
+
+          if (-not (Test-Path $webuiIndex)) {
+            Write-Error "WebUI/index.html not found at expected path: $webuiIndex"
+            exit 1
+          }
+
+          Write-Host "Found packaged WebUI at: $webuiIndex"
 
       - name: Verify packaged WebUI (non-Windows)
         if: runner.os != 'Windows'
@@ -155,7 +184,15 @@ jobs:
 
           echo "Found packaged WebUI at: $webui_index"
 
-      - name: Upload build artifacts
+      - name: Upload build artifacts (Windows runnable bundle)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.os }}
+          path: out/build/release/OnAirDeck_artefacts/Release
+
+      - name: Upload build artifacts (non-Windows)
+        if: runner.os != 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: build-${{ matrix.os }}
