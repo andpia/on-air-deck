@@ -25,7 +25,7 @@ jobs:
         working-directory: vendor/web-ui
         run: |
           npm ci
-          npm run build
+          npm run build -- --base=./
 
       - name: Debug environment
         shell: bash

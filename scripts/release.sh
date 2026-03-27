@@ -55,7 +55,7 @@ if [[ ! -d node_modules ]]; then
 fi
 
 echo "[2/4] Building frontend"
-npm run build
+npm run build -- --base=./
 
 echo "[3/4] Configuring CMake Release"
 cd "$ROOT_DIR"
