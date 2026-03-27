@@ -169,6 +169,14 @@ endif()
 # which still compiles and runs, just without the resource-provider feature.
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/vendor/JUCE/extras/Build/CMake")
+    # Allow the NuGet package location to be supplied via an environment variable
+    # (e.g. set by CI after nuget install) without forcing callers to repeat it on
+    # the cmake command line.
+    if(NOT JUCE_WEBVIEW2_PACKAGE_LOCATION AND DEFINED ENV{JUCE_WEBVIEW2_PACKAGE_LOCATION})
+        set(JUCE_WEBVIEW2_PACKAGE_LOCATION "$ENV{JUCE_WEBVIEW2_PACKAGE_LOCATION}" CACHE PATH
+            "Directory containing the Microsoft.Web.WebView2 NuGet package folder")
+        message(STATUS "WebView2: using JUCE_WEBVIEW2_PACKAGE_LOCATION from environment: ${JUCE_WEBVIEW2_PACKAGE_LOCATION}")
+    endif()
     find_package(WebView2 QUIET)
     if(WebView2_FOUND)
         set(USE_WEBVIEW2 ON)
@@ -237,8 +245,16 @@ endif()
 # Post-build: copy the pre-built Web UI into the output directory.
 # Set WEBUI_DIST_PATH to the dist/ folder produced by `npm run build`.
 set(_ONAIRDECK_IS_RELEASE_CONFIG OFF)
+set(_ONAIRDECK_IS_MULTICONFIG OFF)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(_ONAIRDECK_IS_RELEASE_CONFIG ON)
+elseif(NOT CMAKE_BUILD_TYPE AND CMAKE_CONFIGURATION_TYPES)
+    # Multi-config generator (e.g. Visual Studio) without an explicit
+    # CMAKE_BUILD_TYPE: the actual configuration is chosen at build time via
+    # `cmake --build --config Release`.  We cannot determine here whether a
+    # Release build is intended, so we defer strict enforcement and emit a
+    # warning instead of a fatal error when the dist folder is absent.
+    set(_ONAIRDECK_IS_MULTICONFIG ON)
 endif()
 
 if(WEBUI_DIST_PATH AND EXISTS "${WEBUI_DIST_PATH}")
@@ -283,6 +299,14 @@ else()
                 "Release builds require a pre-built dist folder.\n"
                 "Default expected path: vendor/web-ui/dist\n"
                 "Override with: -DWEBUI_DIST_PATH=<path-to-dist>"
+            )
+        elseif(_ONAIRDECK_IS_MULTICONFIG)
+            message(WARNING
+                "WebUI dist: not configured (multi-config generator detected).\n"
+                "Release builds require a pre-built dist folder.\n"
+                "Default expected path: vendor/web-ui/dist\n"
+                "Override with: -DWEBUI_DIST_PATH=<path-to-dist>\n"
+                "Build the frontend before invoking 'cmake --build --config Release'."
             )
         else()
             message(STATUS
