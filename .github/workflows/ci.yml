@@ -61,12 +61,32 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          # JUCE's FindWebView2.cmake searches for a directory whose name matches
+          # *Microsoft.Web.WebView2* inside JUCE_WEBVIEW2_PACKAGE_LOCATION.
+          # We install via nuget.exe with -OutputDirectory so the package lands
+          # directly in $nugetDir/Microsoft.Web.WebView2.<version>/.
           $nugetDir = "$env:USERPROFILE\AppData\Local\PackageManagement\NuGet\Packages"
+          New-Item -ItemType Directory -Force -Path $nugetDir | Out-Null
+
           nuget install Microsoft.Web.WebView2 `
             -OutputDirectory $nugetDir `
             -NonInteractive
-          # Export the directory so CMake can find the WebView2 package without
-          # relying on JUCE's built-in default path detection.
+
+          # Verify the package directory was created and report it.
+          $packageDir = Get-ChildItem -Path $nugetDir -Directory -Filter "Microsoft.Web.WebView2*" |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+
+          if (-not $packageDir) {
+            Write-Error "Microsoft.Web.WebView2 package directory not found under $nugetDir after nuget install."
+            exit 1
+          }
+
+          Write-Host "WebView2 package installed at: $($packageDir.FullName)"
+          Write-Host "WebView2 include check: $(Test-Path (Join-Path $packageDir.FullName 'build\native\include\WebView2.h'))"
+
+          # Export the parent directory so CMake's FindWebView2.cmake can glob for
+          # the *Microsoft.Web.WebView2* subdirectory automatically.
           echo "JUCE_WEBVIEW2_PACKAGE_LOCATION=$nugetDir" >> $env:GITHUB_ENV
 
       - name: Install Linux dependencies
