@@ -117,6 +117,10 @@ jobs:
             libcurl4-openssl-dev \
             "$webkit_package"
 
+      - name: Setup MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Configure (Windows)
         if: runner.os == 'Windows'
         run: cmake --preset release-windows -DWEBUI_DIST_PATH="${{ github.workspace }}/vendor/web-ui/dist"
