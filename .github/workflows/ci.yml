@@ -118,7 +118,7 @@ jobs:
             "$webkit_package"
 
       - name: Configure
-        run: cmake --preset release
+        run: cmake --preset release -DWEBUI_DIST_PATH=${{ github.workspace }}/vendor/web-ui/dist
 
       - name: Build on non-Windows
         if: runner.os != 'Windows'
