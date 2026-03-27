@@ -177,6 +177,25 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
             "Directory containing the Microsoft.Web.WebView2 NuGet package folder")
         message(STATUS "WebView2: using JUCE_WEBVIEW2_PACKAGE_LOCATION from environment: ${JUCE_WEBVIEW2_PACKAGE_LOCATION}")
     endif()
+    # If still not set, probe common NuGet package cache locations used by
+    # nuget.exe, dotnet, and PowerShell PackageManagement so developers do not
+    # need to set the variable manually.
+    if(NOT JUCE_WEBVIEW2_PACKAGE_LOCATION)
+        foreach(_probe_dir
+            "$ENV{LOCALAPPDATA}/PackageManagement/NuGet/Packages"
+            "$ENV{USERPROFILE}/.nuget/packages"
+        )
+            if(EXISTS "${_probe_dir}")
+                file(GLOB _wv2_probe "${_probe_dir}/*Microsoft.Web.WebView2*")
+                if(_wv2_probe)
+                    set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${_probe_dir}" CACHE PATH
+                        "Directory containing the Microsoft.Web.WebView2 NuGet package folder")
+                    message(STATUS "WebView2: auto-detected NuGet packages at ${JUCE_WEBVIEW2_PACKAGE_LOCATION}")
+                    break()
+                endif()
+            endif()
+        endforeach()
+    endif()
     find_package(WebView2 QUIET)
     if(WebView2_FOUND)
         set(USE_WEBVIEW2 ON)
