@@ -24,8 +24,6 @@ See [docs/build-and-run.md](../docs/build-and-run.md) for full instructions.
 ```bash
 cmake --preset debug && cmake --build --preset debug    # Debug
 cmake --preset release && cmake --build --preset release  # Release (needs dist/ first)
-make build-debug   # Makefile wrapper
-make build-release
 ```
 
 **Web UI** (in `vendor/web-ui/`)

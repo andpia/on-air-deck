@@ -65,10 +65,14 @@ This repository uses `CMakePresets.json` as the default build convention:
 - `debug` writes to `out/build/debug`
 - `release` writes to `out/build/release`
 
-Equivalent Makefile helpers are available:
+You can use CMake directly:
 
-- `make build-debug`
-- `make build-release`
+```bash
+cmake --preset debug
+cmake --build --preset debug
+cmake --preset release
+cmake --build --preset release
+```
 
 ## Windows Prerequisites
 

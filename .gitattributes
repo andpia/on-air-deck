@@ -1,3 +1,0 @@
-src/*.h linguist-language=C++
-src/*.cpp linguist-language=C++
-src/*.mm linguist-language=Objective-C++

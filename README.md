@@ -164,7 +164,7 @@ Optional environment variables:
 - `RELEASE_PRESET`: CMake preset for release builds (default: `release`)
 - `DIST_DIR`: frontend dist path (default: `$FRONTEND_DIR/dist`)
 
-## 🧩 CMake Presets and Makefile Helpers
+## 🧩 CMake Presets
 
 This repository provides `CMakePresets.json` to standardize output folders:
 
@@ -176,13 +176,8 @@ You can use CMake directly:
 ```bash
 cmake --preset debug
 cmake --build --preset debug
-```
-
-Or use Makefile helpers:
-
-```bash
-make build-debug
-make build-release
+cmake --preset release
+cmake --build --preset release
 ```
 
 ## 🧹 Cleaning Generated Files
