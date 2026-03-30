@@ -1,7 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "WebUIComponent.h"
+#include "WebUIComponent.hpp"
 
 /**
     @class MainComponent

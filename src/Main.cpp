@@ -1,5 +1,5 @@
 #include <JuceHeader.h>
-#include "MainComponent.h"
+#include "MainComponent.hpp"
 
 /**
     @class OnAirDeckApplication

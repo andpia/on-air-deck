@@ -1,4 +1,4 @@
-#include "WebUIComponent.h"
+#include "WebUIComponent.hpp"
 
 #include <unordered_map>
 
