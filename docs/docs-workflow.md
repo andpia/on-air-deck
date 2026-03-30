@@ -9,7 +9,7 @@ On macOS, system Python may block global `pip install` because of PEP 668. Use a
 ```bash
 python3 -m venv .venv-docs
 source .venv-docs/bin/activate
-pip install -r requirements-docs.txt
+pip install -r ./docs/mkdocs-requirements.txt
 mkdocs serve
 ```
 
@@ -38,7 +38,7 @@ The workflow:
 
 1. checks out the repository
 2. installs Python 3.11
-3. installs `requirements-docs.txt`
+3. installs `docs/mkdocs-requirements.txt`
 4. runs `mkdocs build --strict`
 5. uploads `out/docs/site/` as the Pages artifact
 6. deploys the generated site

@@ -131,7 +131,7 @@ Project documentation is now built with **MkDocs** and published through GitHub 
 
 1. Install the documentation dependencies:
    ```bash
-   python3 -m pip install -r requirements-docs.txt
+   python3 -m pip install -r ./docs/mkdocs-requirements.txt
    ```
 2. Start the local documentation server:
    ```bash
