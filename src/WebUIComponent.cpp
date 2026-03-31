@@ -36,7 +36,10 @@ std::optional<juce::WebBrowserComponent::Resource> WebUIComponent::provideWebUIR
     const auto webUIDir = getBundledWebUIDirectory();
 
     if (! webUIDir.isDirectory())
+    {
+        DBG ("WebUIComponent: resource provider root missing -> " + webUIDir.getFullPathName());
         return std::nullopt;
+    }
 
     auto normalized = path.upToFirstOccurrenceOf ("?", false, false);
 
@@ -47,16 +50,25 @@ std::optional<juce::WebBrowserComponent::Resource> WebUIComponent::provideWebUIR
         normalized = normalized.substring (1);
 
     if (normalized.contains (".."))
+    {
+        DBG ("WebUIComponent: blocked suspicious resource path -> " + path);
         return std::nullopt;
+    }
 
     const auto requestedFile = webUIDir.getChildFile (normalized);
 
     if (! requestedFile.existsAsFile())
+    {
+        DBG ("WebUIComponent: missing resource -> " + requestedFile.getFullPathName());
         return std::nullopt;
+    }
 
     juce::MemoryBlock block;
     if (! requestedFile.loadFileAsData (block))
+    {
+        DBG ("WebUIComponent: failed to read resource -> " + requestedFile.getFullPathName());
         return std::nullopt;
+    }
 
     static const std::unordered_map<std::string, juce::String> mimeByExtension {
         { ".html", "text/html; charset=utf-8" },
@@ -153,6 +165,7 @@ WebUIComponent::WebUIComponent()
    #endif
 
     startupURL = getStartupURL();
+    DBG ("WebUIComponent: startup URL -> " + startupURL);
     goToURL (startupURL);
 }
 
@@ -193,6 +206,8 @@ void WebUIComponent::pageFinishedLoading (const juce::String& url)
 
 bool WebUIComponent::pageLoadHadNetworkError (const juce::String& errorInfo)
 {
+    DBG ("WebUIComponent: network error callback -> " + errorInfo);
+
     // This callback may also be triggered by secondary resources (favicon,
     // source maps, etc.). Once the main page is up, keep the UI alive.
     if (mainPageLoaded)
@@ -205,6 +220,12 @@ bool WebUIComponent::pageLoadHadNetworkError (const juce::String& errorInfo)
         return false;
 
     fatalLoadErrorShown = true;
+
+    const auto webUIDir = getBundledWebUIDirectory();
+    const auto indexPath = webUIDir.getChildFile ("index.html").getFullPathName();
+    DBG ("WebUIComponent: fatal load error; startup URL -> " + startupURL);
+    DBG ("WebUIComponent: fatal load error; WebUI dir -> " + webUIDir.getFullPathName());
+    DBG ("WebUIComponent: fatal load error; index path -> " + indexPath);
 
     // Build a self-contained error page.  We intentionally avoid a data: URI
     // because the legacy IE/MSHTML backend may block navigation to data: URLs
@@ -285,8 +306,16 @@ void WebUIComponent::handleBridgeAction (const juce::String& action,
 
 juce::String WebUIComponent::getStartupURL()
 {
+    const auto overrideURL = juce::SystemStats::getEnvironmentVariable ("ONAIRDECK_WEBUI_URL", {});
+    if (overrideURL.isNotEmpty())
+    {
+        DBG ("WebUIComponent: using ONAIRDECK_WEBUI_URL override -> " + overrideURL);
+        return overrideURL;
+    }
+
     const auto webUIDir = getBundledWebUIDirectory();
     const juce::File indexFile = webUIDir.getChildFile ("index.html");
+    DBG ("WebUIComponent: probing bundled index -> " + indexFile.getFullPathName());
 
     if (indexFile.existsAsFile())
     {
@@ -302,9 +331,11 @@ juce::String WebUIComponent::getStartupURL()
 
 #if JUCE_DEBUG
     // Development fallback: use the Vite dev server for hot-reload support.
+    DBG ("WebUIComponent: bundled index missing; using debug dev server -> " + juce::String (WEBUI_DEV_SERVER_URL));
     return WEBUI_DEV_SERVER_URL;
 #else
     // Fallback: inline error page shown when the WebUI folder is missing.
+    DBG ("WebUIComponent: bundled index missing in release; showing inline error page");
     return "data:text/html,<h2>Web UI not found</h2>"
            "<p>Expected index.html at: " + indexFile.getFullPathName() + "</p>"
            "<p>Run <code>npm run build</code> in the on-air-deck-figma repo "
