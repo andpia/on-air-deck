@@ -48,9 +48,11 @@ cmake --preset release
 cmake --build --preset release
 ```
 
+When the frontend sources live in `vendor/web-ui/`, CMake also auto-builds `dist/` during the app build if `npm` is available. You can disable that behavior with `-DONAIRDECK_BUILD_BUNDLED_WEBUI=OFF`.
+
 Release packaging copies the frontend files next to the app or inside the `.app` bundle; it does not embed them directly into the executable binary. At runtime, JUCE serves those files from the internal `juce://` resource origin.
 
-Release configure is fail-fast for single-config generators. With multi-config generators (for example Ninja Multi-Config), configure emits a warning if `WEBUI_DIST_PATH` is missing or invalid; ensure the dist folder exists before building `--config Release`.
+Release configure is fail-fast for single-config generators. With multi-config generators (for example Ninja Multi-Config), configure now auto-builds the bundled frontend when possible; otherwise ensure the dist folder exists before building `--config Release`.
 
 If your frontend lives outside this repository, point CMake at the generated `dist/` directory explicitly:
 

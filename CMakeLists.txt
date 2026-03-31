@@ -30,13 +30,26 @@ option(ONAIRDECK_UNITY_BUILD "Enable Unity Build to speed up compilation" OFF)
 #   cmake -DWEBUI_DIST_PATH=/path/to/on-air-deck-figma/dist ...
 set(WEBUI_DIST_PATH "" CACHE PATH
     "Path to the Web UI dist/ folder produced by 'npm run build'")
+option(ONAIRDECK_BUILD_BUNDLED_WEBUI
+    "Automatically build vendor/web-ui/dist when the bundled frontend sources are available"
+    ON)
 
 set(ONAIRDECK_WEBUI_SUBMODULE_DIR "${CMAKE_SOURCE_DIR}/vendor/web-ui")
+set(_ONAIRDECK_BUNDLED_WEBUI_DIST_DIR "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/dist")
+set(_ONAIRDECK_BUNDLED_WEBUI_INDEX "${_ONAIRDECK_BUNDLED_WEBUI_DIST_DIR}/index.html")
+set(_ONAIRDECK_HAS_BUNDLED_WEBUI_SOURCES OFF)
+if(EXISTS "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/package.json")
+    set(_ONAIRDECK_HAS_BUNDLED_WEBUI_SOURCES ON)
+endif()
+
 if(NOT WEBUI_DIST_PATH)
-    set(_WEBUI_DIST_AUTODETECT "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/dist")
-    if(EXISTS "${_WEBUI_DIST_AUTODETECT}")
-        set(WEBUI_DIST_PATH "${_WEBUI_DIST_AUTODETECT}")
-        message(STATUS "WebUI dist: auto-detected from submodule at ${WEBUI_DIST_PATH}")
+    if(_ONAIRDECK_HAS_BUNDLED_WEBUI_SOURCES)
+        set(WEBUI_DIST_PATH "${_ONAIRDECK_BUNDLED_WEBUI_DIST_DIR}")
+        if(EXISTS "${_ONAIRDECK_BUNDLED_WEBUI_INDEX}")
+            message(STATUS "WebUI dist: auto-detected from submodule at ${WEBUI_DIST_PATH}")
+        else()
+            message(STATUS "WebUI dist: will be built from bundled frontend sources at ${ONAIRDECK_WEBUI_SUBMODULE_DIR}")
+        endif()
     endif()
 endif()
 
@@ -239,6 +252,66 @@ set_target_properties(OnAirDeck PROPERTIES
     UNITY_BUILD ${ONAIRDECK_UNITY_BUILD}
 )
 
+set(_ONAIRDECK_WEBUI_BUILD_TARGET_ENABLED OFF)
+if(ONAIRDECK_BUILD_BUNDLED_WEBUI
+   AND _ONAIRDECK_HAS_BUNDLED_WEBUI_SOURCES
+   AND WEBUI_DIST_PATH STREQUAL "${_ONAIRDECK_BUNDLED_WEBUI_DIST_DIR}")
+    find_program(ONAIRDECK_NPM_EXECUTABLE npm)
+
+    if(ONAIRDECK_NPM_EXECUTABLE)
+        set(_ONAIRDECK_WEBUI_MANIFESTS
+            "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/package.json"
+            "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/index.html"
+            "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/vite.config.ts"
+        )
+        if(EXISTS "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/package-lock.json")
+            list(APPEND _ONAIRDECK_WEBUI_MANIFESTS "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/package-lock.json")
+            set(_ONAIRDECK_WEBUI_INSTALL_ARGS ci)
+        else()
+            set(_ONAIRDECK_WEBUI_INSTALL_ARGS install)
+        endif()
+        if(EXISTS "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/postcss.config.mjs")
+            list(APPEND _ONAIRDECK_WEBUI_MANIFESTS "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/postcss.config.mjs")
+        endif()
+
+        file(GLOB_RECURSE ONAIRDECK_WEBUI_BUILD_INPUTS CONFIGURE_DEPENDS
+            "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/src/*"
+            "${ONAIRDECK_WEBUI_SUBMODULE_DIR}/guidelines/*"
+        )
+
+        set(_ONAIRDECK_WEBUI_INSTALL_STAMP "${CMAKE_CURRENT_BINARY_DIR}/webui-node-modules.stamp")
+
+        add_custom_command(
+            OUTPUT "${_ONAIRDECK_WEBUI_INSTALL_STAMP}"
+            COMMAND ${CMAKE_COMMAND} -E chdir "${ONAIRDECK_WEBUI_SUBMODULE_DIR}"
+                "${ONAIRDECK_NPM_EXECUTABLE}" ${_ONAIRDECK_WEBUI_INSTALL_ARGS}
+            COMMAND ${CMAKE_COMMAND} -E touch "${_ONAIRDECK_WEBUI_INSTALL_STAMP}"
+            DEPENDS ${_ONAIRDECK_WEBUI_MANIFESTS}
+            COMMENT "Installing bundled Web UI dependencies"
+            VERBATIM
+        )
+
+        add_custom_command(
+            OUTPUT "${_ONAIRDECK_BUNDLED_WEBUI_INDEX}"
+            COMMAND ${CMAKE_COMMAND} -E chdir "${ONAIRDECK_WEBUI_SUBMODULE_DIR}"
+                "${ONAIRDECK_NPM_EXECUTABLE}" run build -- --base=./
+            DEPENDS "${_ONAIRDECK_WEBUI_INSTALL_STAMP}" ${_ONAIRDECK_WEBUI_MANIFESTS} ${ONAIRDECK_WEBUI_BUILD_INPUTS}
+            COMMENT "Building bundled Web UI"
+            VERBATIM
+        )
+
+        add_custom_target(OnAirDeckWebUI DEPENDS "${_ONAIRDECK_BUNDLED_WEBUI_INDEX}")
+        add_dependencies(OnAirDeck OnAirDeckWebUI)
+        set(_ONAIRDECK_WEBUI_BUILD_TARGET_ENABLED ON)
+        message(STATUS "WebUI build: enabled for bundled frontend sources")
+    else()
+        message(WARNING
+            "npm was not found in PATH, so CMake cannot auto-build vendor/web-ui/dist.\n"
+            "Install Node.js and npm, or pass -DWEBUI_DIST_PATH=<path-to-dist>."
+        )
+    endif()
+endif()
+
 # Configuration-specific compiler flags
 if(NOT MSVC)
     target_compile_options(OnAirDeck PRIVATE
@@ -275,7 +348,14 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(_ONAIRDECK_IS_RELEASE_CONFIG ON)
 endif()
 
+set(_ONAIRDECK_WEBUI_DIST_READY OFF)
 if(WEBUI_DIST_PATH AND EXISTS "${WEBUI_DIST_PATH}")
+    set(_ONAIRDECK_WEBUI_DIST_READY ON)
+elseif(_ONAIRDECK_WEBUI_BUILD_TARGET_ENABLED)
+    set(_ONAIRDECK_WEBUI_DIST_READY ON)
+endif()
+
+if(_ONAIRDECK_WEBUI_DIST_READY)
     if(APPLE)
         # macOS: copy into the .app bundle's Resources folder.
         add_custom_command(TARGET OnAirDeck POST_BUILD
@@ -293,7 +373,11 @@ if(WEBUI_DIST_PATH AND EXISTS "${WEBUI_DIST_PATH}")
             COMMENT "Copying Web UI to WebUI/ next to executable"
         )
     endif()
-    message(STATUS "WebUI dist: ${WEBUI_DIST_PATH} -> copied post-build")
+    if(_ONAIRDECK_WEBUI_BUILD_TARGET_ENABLED)
+        message(STATUS "WebUI dist: ${WEBUI_DIST_PATH} -> built and copied post-build")
+    else()
+        message(STATUS "WebUI dist: ${WEBUI_DIST_PATH} -> copied post-build")
+    endif()
 else()
     if(WEBUI_DIST_PATH)
         if(_ONAIRDECK_IS_RELEASE_CONFIG)
