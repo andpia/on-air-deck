@@ -10,29 +10,15 @@
       "name": "debug",
       "displayName": "Debug",
       "description": "Debug build in out/build/debug",
-      "binaryDir": "${sourceDir}/out/build/debug",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/out/build/debug"
     },
     {
       "name": "release",
       "displayName": "Release",
       "description": "Release build in out/build/release",
-      "binaryDir": "${sourceDir}/out/build/release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    },
-    {
-      "name": "release-windows",
-      "displayName": "Release (Windows/Ninja)",
-      "description": "Release build using Ninja single-config generator for Windows CI",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/out/build/release",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/out/build/release"
     }
   ],
   "buildPresets": [
@@ -46,12 +32,6 @@
       "name": "release",
       "displayName": "Build Release",
       "configurePreset": "release",
-      "configuration": "Release"
-    },
-    {
-      "name": "release-windows",
-      "displayName": "Build Release (Windows/Ninja)",
-      "configurePreset": "release-windows",
       "configuration": "Release"
     }
   ]

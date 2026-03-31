@@ -79,7 +79,7 @@ No automated tests exist yet (no CTest, no Jest/Vitest).
 | `src/WebUIComponent.cpp` | Bridge implementation — `pageAboutToLoad`, `handleBridgeAction`, resource provider |
 | `src/MainComponent.cpp` | Window layout wiring |
 | `CMakeLists.txt` | Build config, platform detection, WebUI copy step |
-| `CMakePresets.json` | Preset definitions (`debug`, `release`, `release-windows`) |
+| `CMakePresets.json` | Preset definitions (`debug`, `release`) |
 | `vendor/web-ui/src/app/` | React app — pages, components, routes, types |
 | `vendor/web-ui/vite.config.ts` | Vite config — `base`, alias, plugins |
 | `docs/architecture.md` | Component diagram and design decisions |

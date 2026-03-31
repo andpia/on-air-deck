@@ -7,7 +7,11 @@ set(ONAIRDECK_COMPANY_NAME "BremaStack")
 project(OnAirDeck VERSION ${ONAIRDECK_VERSION} LANGUAGES C CXX)
 
 message(STATUS "OnAirDeck version: ${ONAIRDECK_VERSION}")
-message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
+if(CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Build mode: multi-config (${CMAKE_CONFIGURATION_TYPES})")
+else()
+    message(STATUS "Build mode: single-config (${CMAKE_BUILD_TYPE})")
+endif()
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "System: ${CMAKE_SYSTEM_NAME}")
 
@@ -265,15 +269,10 @@ endif()
 # Set WEBUI_DIST_PATH to the dist/ folder produced by `npm run build`.
 set(_ONAIRDECK_IS_RELEASE_CONFIG OFF)
 set(_ONAIRDECK_IS_MULTICONFIG OFF)
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(_ONAIRDECK_IS_RELEASE_CONFIG ON)
-elseif(NOT CMAKE_BUILD_TYPE AND CMAKE_CONFIGURATION_TYPES)
-    # Multi-config generator (e.g. Visual Studio) without an explicit
-    # CMAKE_BUILD_TYPE: the actual configuration is chosen at build time via
-    # `cmake --build --config Release`.  We cannot determine here whether a
-    # Release build is intended, so we defer strict enforcement and emit a
-    # warning instead of a fatal error when the dist folder is absent.
+if(CMAKE_CONFIGURATION_TYPES)
     set(_ONAIRDECK_IS_MULTICONFIG ON)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(_ONAIRDECK_IS_RELEASE_CONFIG ON)
 endif()
 
 if(WEBUI_DIST_PATH AND EXISTS "${WEBUI_DIST_PATH}")

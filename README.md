@@ -24,6 +24,8 @@
 OnAirDeck uses **CMake** for modern, cross-platform dependency management.
 > **JUCE 8 required** — OnAirDeck uses the `WebBrowserComponent::Options::withResourceProvider` API introduced in JUCE 8.  The `vendor/JUCE` submodule is pinned to JUCE 8.0.12 or later.  On Windows, the [Microsoft WebView2 SDK](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) NuGet package is **required** — without it JUCE falls back to the legacy IE backend which does not support modern JavaScript (ES modules) and the UI will show a blank white screen at runtime.
 
+> **Ninja required** — `CMakePresets.json` uses the `Ninja Multi-Config` generator for `debug` and `release`, so Ninja must be available on PATH before running `cmake --preset ...`.
+
 1. **Clone the repository**:
     ```bash
     git clone --recursive https://github.com/andpia/on-air-deck.git
@@ -110,7 +112,7 @@ In **Debug** builds the app first loads bundled static assets (if available), an
    - **macOS**: `OnAirDeck.app/Contents/Resources/WebUI/`
    - **Windows / Linux**: `WebUI/` next to the executable
 
-   Release configure is fail-fast: if `WEBUI_DIST_PATH` is missing or invalid, CMake stops with a fatal error.
+   Release configure is fail-fast for single-config generators. With multi-config generators (for example Ninja Multi-Config), configure emits a warning if `WEBUI_DIST_PATH` is missing or invalid; ensure the dist folder exists before building `--config Release`.
 
    The Web UI is therefore bundled with the Release app package, but not embedded directly into the executable binary. At runtime, the app serves these assets via JUCE's internal `juce://` resource origin.
 

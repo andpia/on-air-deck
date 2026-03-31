@@ -2,6 +2,13 @@
 
 This page lists external repositories required to build and run OnAirDeck workflows.
 
+## Build Tool Dependencies
+
+- CMake 3.22 or newer.
+- Ninja (required): `CMakePresets.json` uses the `Ninja Multi-Config` generator for the standard `debug` and `release` presets.
+
+Note: CMake does not install Ninja automatically. The generator selection tells CMake which external build tool to use; that tool must already be installed and available on PATH.
+
 ## Repository Dependencies
 
 ### JUCE

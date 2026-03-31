@@ -3,6 +3,7 @@
 ## Prerequisites
 
 - CMake 3.22 or newer
+- Ninja (required by `CMakePresets.json`, which uses the `Ninja Multi-Config` generator)
 - A C++17-capable compiler
 - **JUCE 8.0.12 or later** — Git submodules initialized so the `vendor/JUCE/` and `vendor/web-ui/` directories are populated
 - Access to the companion frontend repository `andpia/on-air-deck-figma` (included as `vendor/web-ui/` submodule by default)
@@ -49,7 +50,7 @@ cmake --build --preset release
 
 Release packaging copies the frontend files next to the app or inside the `.app` bundle; it does not embed them directly into the executable binary. At runtime, JUCE serves those files from the internal `juce://` resource origin.
 
-Release configure is fail-fast: if `WEBUI_DIST_PATH` is missing or invalid, CMake stops with a fatal error.
+Release configure is fail-fast for single-config generators. With multi-config generators (for example Ninja Multi-Config), configure emits a warning if `WEBUI_DIST_PATH` is missing or invalid; ensure the dist folder exists before building `--config Release`.
 
 If your frontend lives outside this repository, point CMake at the generated `dist/` directory explicitly:
 
@@ -85,6 +86,20 @@ Install-Package Microsoft.Web.WebView2 -Scope CurrentUser -Force
 ```
 
 CMake's `FindWebView2.cmake` (bundled with JUCE) searches `$USERPROFILE\AppData\Local\PackageManagement\NuGet\Packages` automatically.  Once installed, re-run CMake configure and `JUCE_USE_WIN_WEBVIEW2=1` will be printed to confirm detection.
+
+Install Ninja as well, since the standard CMake presets use the `Ninja Multi-Config` generator.
+
+Option 1 (winget):
+
+```powershell
+winget install --id Ninja-build.Ninja --exact --source winget
+```
+
+Option 2 (Chocolatey):
+
+```powershell
+choco install ninja -y
+```
 
 ### WebView2 Runtime (end-user requirement)
 
