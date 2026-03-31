@@ -188,15 +188,17 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/vendor/JUCE/extras/Build/CMake")
     # Allow the NuGet package location to be supplied via an environment variable
     # (e.g. set by CI after nuget install) without forcing callers to repeat it on
-    # the cmake command line.
-    if(NOT JUCE_WEBVIEW2_PACKAGE_LOCATION AND DEFINED ENV{JUCE_WEBVIEW2_PACKAGE_LOCATION})
+    # the cmake command line.  Use FORCE so that JUCE's own cache initialisation
+    # (which pre-populates the variable with OFF) does not shadow the env value.
+    if(DEFINED ENV{JUCE_WEBVIEW2_PACKAGE_LOCATION}
+       AND NOT "$ENV{JUCE_WEBVIEW2_PACKAGE_LOCATION}" STREQUAL "")
         set(JUCE_WEBVIEW2_PACKAGE_LOCATION "$ENV{JUCE_WEBVIEW2_PACKAGE_LOCATION}" CACHE PATH
-            "Directory containing the Microsoft.Web.WebView2 NuGet package folder")
+            "Directory containing the Microsoft.Web.WebView2 NuGet package folder" FORCE)
         message(STATUS "WebView2: using JUCE_WEBVIEW2_PACKAGE_LOCATION from environment: ${JUCE_WEBVIEW2_PACKAGE_LOCATION}")
     endif()
-    # If still not set, probe common NuGet package cache locations used by
-    # nuget.exe, dotnet, and PowerShell PackageManagement so developers do not
-    # need to set the variable manually.
+    # If still not set (or was set to a falsy placeholder), probe common NuGet
+    # package cache locations used by nuget.exe, dotnet, and PowerShell
+    # PackageManagement so developers do not need to set the variable manually.
     if(NOT JUCE_WEBVIEW2_PACKAGE_LOCATION)
         foreach(_probe_dir
             "$ENV{LOCALAPPDATA}/PackageManagement/NuGet/Packages"
@@ -206,7 +208,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
                 file(GLOB _wv2_probe "${_probe_dir}/*Microsoft.Web.WebView2*")
                 if(_wv2_probe)
                     set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${_probe_dir}" CACHE PATH
-                        "Directory containing the Microsoft.Web.WebView2 NuGet package folder")
+                        "Directory containing the Microsoft.Web.WebView2 NuGet package folder" FORCE)
                     message(STATUS "WebView2: auto-detected NuGet packages at ${JUCE_WEBVIEW2_PACKAGE_LOCATION}")
                     break()
                 endif()
@@ -256,7 +258,7 @@ set(_ONAIRDECK_WEBUI_BUILD_TARGET_ENABLED OFF)
 if(ONAIRDECK_BUILD_BUNDLED_WEBUI
    AND _ONAIRDECK_HAS_BUNDLED_WEBUI_SOURCES
    AND WEBUI_DIST_PATH STREQUAL "${_ONAIRDECK_BUNDLED_WEBUI_DIST_DIR}")
-    find_program(ONAIRDECK_NPM_EXECUTABLE npm)
+    find_program(ONAIRDECK_NPM_EXECUTABLE NAMES npm npm.cmd)
 
     if(ONAIRDECK_NPM_EXECUTABLE)
         set(_ONAIRDECK_WEBUI_MANIFESTS
