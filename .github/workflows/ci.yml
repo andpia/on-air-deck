@@ -47,8 +47,12 @@ jobs:
 
       - name: Build Web UI
         working-directory: vendor/web-ui
+        shell: bash
         run: |
-          npm ci
+          set -euxo pipefail
+          node --version
+          npm --version
+          npm ci --verbose
           npm run build -- --base=./
 
       - name: Debug environment
@@ -154,7 +158,7 @@ jobs:
         run: |
           $logPath = Join-Path $env:RUNNER_TEMP "cmake-configure-windows.log"
 
-          cmake --preset release -DWEBUI_DIST_PATH="${{ github.workspace }}/vendor/web-ui/dist" 2>&1 |
+          cmake --preset release -DWEBUI_DIST_PATH="${{ github.workspace }}/vendor/web-ui/dist" -DONAIRDECK_BUILD_BUNDLED_WEBUI=OFF 2>&1 |
             Tee-Object -FilePath $logPath
 
           if (-not (Select-String -Path $logPath -Pattern "WebView2 SDK: found" -Quiet)) {
@@ -164,7 +168,7 @@ jobs:
 
       - name: Configure (non-Windows)
         if: runner.os != 'Windows'
-        run: cmake --preset release -DWEBUI_DIST_PATH="${{ github.workspace }}/vendor/web-ui/dist"
+        run: cmake --preset release -DWEBUI_DIST_PATH="${{ github.workspace }}/vendor/web-ui/dist" -DONAIRDECK_BUILD_BUNDLED_WEBUI=OFF
 
       - name: Build on non-Windows
         if: runner.os != 'Windows'
