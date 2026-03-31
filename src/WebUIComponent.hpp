@@ -34,6 +34,15 @@ public:
     bool pageLoadHadNetworkError (const juce::String& errorInfo) override;
 
 private:
+  // Last startup URL requested by the component.
+  juce::String startupURL;
+
+  // Becomes true after the first successful top-level page load callback.
+  bool mainPageLoaded = false;
+
+  // Prevent repeatedly replacing the page with the same error UI.
+  bool fatalLoadErrorShown = false;
+
     /** Returns the expected bundled WebUI directory for the current platform. */
     static juce::File getBundledWebUIDirectory();
 

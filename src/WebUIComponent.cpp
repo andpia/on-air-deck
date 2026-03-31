@@ -152,7 +152,8 @@ WebUIComponent::WebUIComponent()
     }
    #endif
 
-    goToURL (getStartupURL());
+    startupURL = getStartupURL();
+    goToURL (startupURL);
 }
 
 bool WebUIComponent::pageAboutToLoad (const juce::String& newURL)
@@ -186,11 +187,25 @@ bool WebUIComponent::pageAboutToLoad (const juce::String& newURL)
 
 void WebUIComponent::pageFinishedLoading (const juce::String& url)
 {
+    mainPageLoaded = true;
     DBG ("WebUIComponent: page loaded -> " + url);
 }
 
 bool WebUIComponent::pageLoadHadNetworkError (const juce::String& errorInfo)
 {
+    // This callback may also be triggered by secondary resources (favicon,
+    // source maps, etc.). Once the main page is up, keep the UI alive.
+    if (mainPageLoaded)
+    {
+        DBG ("WebUIComponent: non-fatal subresource load error -> " + errorInfo);
+        return false;
+    }
+
+    if (fatalLoadErrorShown)
+        return false;
+
+    fatalLoadErrorShown = true;
+
     // Build a self-contained error page.  We intentionally avoid a data: URI
     // because the legacy IE/MSHTML backend may block navigation to data: URLs
     // depending on the active security zone.  Writing a physical temp file and
