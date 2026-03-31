@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 
 # Centralized version
 set(ONAIRDECK_VERSION "0.1.0")
-set(ONAIRDECK_COMPANY_NAME "BremaLabs")
+set(ONAIRDECK_COMPANY_NAME "BremaStack")
 
 project(OnAirDeck VERSION ${ONAIRDECK_VERSION} LANGUAGES C CXX)
 
